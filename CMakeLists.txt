@@ -16,6 +16,7 @@ set(HEADERS
     FreeImageHelper.h
     VirtualSensor.h
     KinectFusion.h
+    NearestNeighbor.h
 )
 
 set(SOURCES
@@ -28,6 +29,6 @@ find_package( OpenCV REQUIRED)
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kifu ${HEADERS} ${SOURCES})
-target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(kifu general freeimage ${OpenCV_LIBS})
+target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${Flann_INCLUDE_DIR})
+target_link_libraries(kifu general freeimage lz4 ${OpenCV_LIBS})
 
