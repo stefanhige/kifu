@@ -4,6 +4,10 @@
 #include "Eigen.h"
 #include "VirtualSensor.h"
 
+#include <opencv4/opencv2/core.hpp>
+#include <opencv4/opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+
 // compute surface and normal maps
 class SurfaceMeasurer
 {
@@ -21,61 +25,124 @@ public:
 
     void smoothInput()
     {
-        std::cout << "not implemented." << std::endl;
-        // smooth with gaussian kernel
-//        float coeff[] = {0.0545, 0.2442, 0.4026, 0.2442, 0.0545};
-//        int size = 5;
-//        float* smoothDepthMap1 = new float[m_DepthImageHeight*(m_DepthImageWidth-4)];
-//        float* smoothDepthMap1ptr = smoothDepthMap1;
+        cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
+        cv::Mat rawDepthMapCopy = rawDepthMap.clone();
+        cv::bilateralFilter(rawDepthMapCopy, rawDepthMap, 5, 10, 10);
 
-//        // not yet implemented
-//        for(int row=0;row<m_DepthImageHeight;++row)
-//        {
-//            for(int idx=row*m_DepthImageWidth+2; idx < (row+1)*m_DepthImageWidth-2; ++idx)
-//            {
-//                float sum = 0;
-//                for(int pos=0; pos<5; ++pos)
-//                {
-//                    sum += coeff[pos] * m_rawDepthMap[idx+pos-2];
-//                }
-//                *smoothDepthMap1ptr = sum;
-//                smoothDepthMap1ptr++;
-//            }
-//        }
-//        //for(int col=0;col<m_DepthImageWidth-4;++col)
+    }
+    void process()
+    {
+        computeVertexAndNormalMap();
+    }
 
-//        for(int col=0;col<2;++col)
-//        {
-//            // for loop not correct
-//            for(int idx=col; idx<col+(m_DepthImageHeight-2)*(m_DepthImageWidth-4);idx += m_DepthImageWidth-4)
-//            {
-//                std::cout << idx << " ";
-//                float sum = 0;
-//                for(int pos=0; pos<5; ++pos)
-//                {
-//                    sum += coeff[pos] * smoothDepthMap1[idx+(pos-2)*(m_DepthImageWidth-4)];
-//                }
-//            }
+    void printDepthMap()
+    {
+        cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
+        std::cout << rawDepthMap;
+    }
 
-//            std::cout << " end" << std::endl;
-//        }
+    void displayDepthMap()
+    {
+        // TODO
+        cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
+        cv::Mat normDepthMap;
+        //cv::patchNaNs(rawDepthMap);
+        std::cout << cv::checkRange(rawDepthMap);
+        cv::normalize(rawDepthMap, normDepthMap, 0, 1, cv::NORM_MINMAX);
+        std::cout << cv::checkRange(normDepthMap);
+        //std::cout << normDepthMap;
+        std::string windowName = "rawDepthMap";
+        cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+
+        cv::Mat test = cv::Mat::zeros(100,100,CV_32F);
+        cv::imshow(windowName, rawDepthMap);
+        cv::waitKey(0);
     }
 
 
 private:
-    void computeVertexMap()
+    void computeVertexAndNormalMap()
     {
+        m_vertexMap.reserve(m_DepthImageHeight*m_DepthImageWidth);
+        m_normalMap.reserve(m_DepthImageHeight*m_DepthImageWidth);
 
-    }
-    void computeNormalMap()
-    {
+        m_vertexValidityMap.reserve(m_DepthImageHeight*m_DepthImageWidth);
+        m_normalValidityMap.reserve(m_DepthImageHeight*m_DepthImageWidth);
 
+        //#pragma omp parallel for
+
+        float fovX = m_DepthIntrinsics(0, 0);
+        float fovY = m_DepthIntrinsics(1, 1);
+        float cX = m_DepthIntrinsics(0, 2);
+        float cY = m_DepthIntrinsics(1, 2);
+        for(int y = 0; y < m_DepthImageHeight; ++y)
+        {
+            for(int x = 0; x < m_DepthImageWidth; ++x)
+            {
+                unsigned int idx = y*m_DepthImageWidth + x;
+                const float depth = m_rawDepthMap[idx];
+                if (depth == MINF || depth == NAN)
+                {
+                    m_vertexMap[idx] = Vector3f(MINF, MINF, MINF);
+                    m_vertexValidityMap[idx] = false;
+                }
+                else
+                {
+                    // backproject to camera space
+                    m_vertexMap[idx] = Vector3f((x - cX) / fovX * depth, (y - cY) / fovY * depth, depth);
+                    m_vertexValidityMap[idx] = true;
+                }
+
+            }
+        }
+        const float maxDistHalve = 0.05f;
+        for(int y = 1; y < m_DepthImageHeight-1; ++y)
+        {
+            for(int x = 1; x < m_DepthImageWidth-1; ++x)
+            {
+                unsigned int idx = y*m_DepthImageWidth + x;
+                const float du = 0.5f * (m_rawDepthMap[idx + 1] - m_rawDepthMap[idx - 1]);
+                const float dv = 0.5f * (m_rawDepthMap[idx + m_DepthImageWidth] - m_rawDepthMap[idx - m_DepthImageWidth]);
+                if (!std::isfinite(du) || !std::isfinite(dv) || std::abs(du) > maxDistHalve || std::abs(dv) > maxDistHalve)
+                {
+                    m_normalMap[idx] = Vector3f(MINF, MINF, MINF);
+                    m_normalValidityMap[idx] = false;
+                }
+                else
+                {
+                    m_normalMap[idx] = Vector3f(du, dv, -1);
+                    m_normalMap[idx].normalize();
+                    m_normalValidityMap[idx] = true;
+                }
+            }
+        }
+        // edge regions
+        for (int x = 0; x < m_DepthImageWidth; ++x) {
+            m_normalMap[x] = Vector3f(MINF, MINF, MINF);
+            m_normalMap[x + (m_DepthImageHeight - 1) * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
+        }
+        for (int y = 0; y < m_DepthImageHeight; ++y) {
+            m_normalMap[y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
+            m_normalMap[(m_DepthImageWidth - 1) + y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
+        }
+
+//        for(int i= 0; i<10; ++i)
+//        {
+//            std::cout << "v " << m_vertexMap[i] << std::endl;
+//            std::cout << "n " << m_normalMap[i] << std::endl;
+
+//        }
     }
+
 
     Matrix3f m_DepthIntrinsics;
     unsigned int m_DepthImageHeight;
     unsigned int m_DepthImageWidth;
     float* m_rawDepthMap;
+    std::vector<Vector3f> m_vertexMap;
+    std::vector<bool> m_vertexValidityMap;
+    std::vector<Vector3f> m_normalMap;
+    std::vector<bool> m_normalValidityMap;
 
 };
 
@@ -107,7 +174,9 @@ public:
                                                 m_InputHandle->getDepthImageHeight(),
                                                 m_InputHandle->getDepthImageWidth());
         m_SurfaceMeasurer->registerInput(m_InputHandle->getDepth());
-        m_SurfaceMeasurer->smoothInput();
+        //m_SurfaceMeasurer->smoothInput();
+        //m_SurfaceMeasurer->displayDepthMap();
+        m_SurfaceMeasurer->process();
     }
 
 

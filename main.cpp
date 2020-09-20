@@ -19,7 +19,7 @@ int main()
     KiFuModel model(sensor);
     //model.addInputHandle(sensor);
 
-    model.processNextFrame();
+    //model.processNextFrame();
 
 
 
