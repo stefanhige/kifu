@@ -18,6 +18,88 @@ struct PointCloud
     std::vector<bool> normalsValid;
 };
 
+
+// truncated signed distance function
+class Tsdf
+{
+public:
+    Tsdf(unsigned int size, float voxelSize)
+        : m_voxelSize(voxelSize)
+    {
+        assert(!(size % 2));
+        m_tsdf = new float[size*size*size];
+        m_size = size;
+    }
+
+    float& operator()(int x, int y, int z)
+    {
+        assert(x < m_size && x >= 0);
+        assert(y < m_size && y >= 0);
+        assert(z < m_size && z >= 0);
+        return m_tsdf[x + y*m_size + z*m_size*m_size];
+    }
+
+    float operator()(int x, int y, int z) const
+    {
+        assert(x < m_size && x >= 0);
+        assert(y < m_size && y >= 0);
+        assert(z < m_size && z >= 0);
+        return m_tsdf[x + y*m_size + z*m_size*m_size];
+    }
+
+    float operator()(Vector3f pos)
+    {
+       Vector3f rel_pos = pos - m_origin;
+       int x = rel_pos.x() / m_voxelSize;
+       int y = rel_pos.y() / m_voxelSize;
+       int z = rel_pos.z() / m_voxelSize;
+       return this->operator()(x, y, z);
+
+    }
+
+    float& operator()(int idx)
+    {
+        return m_tsdf[idx];
+    }
+
+    Vector3f getPoint(int idx)
+    {
+       return Vector3f(0, 0, 0);
+    }
+
+    int ravel_index(int x, int y, int z) const
+    {
+        assert(x < m_size && x >= 0);
+        assert(y < m_size && y >= 0);
+        assert(z < m_size && z >= 0);
+        return x + y*m_size + z*m_size*m_size;
+    }
+
+    int ravel_index(std::tuple<int, int, int> xyz) const
+    {
+        return ravel_index(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz));
+    }
+
+
+     std::tuple<int, int, int> unravel_index(const int idx) const
+    {
+        assert(idx < m_size*m_size*m_size && idx >= 0);
+
+        const int x = idx % m_size;
+        const int z = idx / (m_size*m_size);
+        const int y = (idx / m_size) % m_size;
+
+        return std::tuple<int, int, int>(x, y, z);
+    }
+
+
+private:
+    float* m_tsdf;
+    unsigned int m_size;
+    Vector3f m_origin = Vector3f(0, 0, 0);
+    float m_voxelSize;
+};
+
 // compute surface and normal maps
 class SurfaceMeasurer
 {
@@ -25,7 +107,11 @@ public:
     SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, unsigned int DepthImageHeight, unsigned int DepthImageWidth)
         : m_DepthIntrinsics(DepthIntrinsics),
           m_DepthImageHeight(DepthImageHeight),
-          m_DepthImageWidth(DepthImageWidth)
+          m_DepthImageWidth(DepthImageWidth),
+          m_vertexMap(DepthImageHeight*DepthImageWidth),
+          m_vertexValidityMap(DepthImageHeight*DepthImageWidth),
+          m_normalMap(DepthImageHeight*DepthImageWidth),
+          m_normalValidityMap(DepthImageHeight*DepthImageWidth)
     {}
 
     void registerInput(float* depthMap)
@@ -99,14 +185,14 @@ private:
                 const float depth = m_rawDepthMap[idx];
                 if (depth == MINF || depth == NAN)
                 {
-                    m_vertexMap.push_back(Vector3f(MINF, MINF, MINF));
-                    m_vertexValidityMap.push_back(false);
+                    m_vertexMap[idx] = Vector3f(MINF, MINF, MINF);
+                    m_vertexValidityMap[idx] = false;
                 }
                 else
                 {
                     // backproject to camera space
-                    m_vertexMap.push_back(Vector3f((x - cX) / fovX * depth, (y - cY) / fovY * depth, depth));
-                    m_vertexValidityMap.push_back(true);
+                    m_vertexMap[idx] = Vector3f((x - cX) / fovX * depth, (y - cY) / fovY * depth, depth);
+                    m_vertexValidityMap[idx] = true;
                 }
 
             }
@@ -178,13 +264,35 @@ public:
         m_target.pointsValid = std::vector<bool>(points.size(), true);
 
     }
+
     void setSource(std::vector<Vector3f> points, std::vector<Vector3f> normals)
     {
+        setSource(points, normals, 1);
+    }
+
+    void setSource(std::vector<Vector3f> points, std::vector<Vector3f> normals, unsigned int downsample)
+    {
+        if (downsample == 1)
+        {
         m_source.points = points;
         m_source.normals = normals;
 
         m_source.normalsValid = std::vector<bool>(normals.size(), true);
-        m_source.pointsValid = std::vector<bool>(points.size(), true);
+        m_source.pointsValid = std::vector<bool>(points.size(), true);}
+        else
+        {
+            int nPoints = std::min(points.size(), normals.size()) / downsample;
+            m_source.points = std::vector<Vector3f>(nPoints);
+            m_source.normals = std::vector<Vector3f>(nPoints);
+            for (int i = 0; i < nPoints; ++i)
+            {
+                m_source.points[i] = points[i*downsample];
+                m_source.normals[i] = normals[i*downsample];
+            }
+
+            m_source.normalsValid = std::vector<bool>(nPoints, true);
+            m_source.pointsValid = std::vector<bool>(nPoints, true);
+        }
     }
 
 
@@ -196,7 +304,7 @@ public:
             std::cout << m_target.points[i].transpose() << std::endl;
         }
     }
-    virtual Matrix4f estimatePose(Matrix4f) = 0;
+    virtual Matrix4f estimatePose(Matrix4f = Matrix4f::Identity()) = 0;
 
     static std::vector<Vector3f> pruneVector(std::vector<Vector3f>& input, std::vector<bool>& validity)
     {
@@ -243,7 +351,7 @@ protected:
     // missing normals
     PointCloud m_target;
     PointCloud m_source;
-    int m_nIter;
+    int m_nIter = 10;
 };
 
 class NearestNeighborPoseEstimator : public PoseEstimator
@@ -354,6 +462,8 @@ private:
 class SurfaceReconstructor
 {
 
+private:
+    std::shared_ptr<Tsdf> m_tsdf;
 };
 
 class SurfacePredictor
@@ -370,7 +480,7 @@ public:
         : m_InputHandle(&InputHandle)
     {
         m_InputHandle->processNextFrame();
-        m_SurfaceMeasurer = new SurfaceMeasurer(m_InputHandle->getDepthIntrinsics(),
+        m_SurfaceMeasurer = std::make_unique<SurfaceMeasurer>(m_InputHandle->getDepthIntrinsics(),
                                                 m_InputHandle->getDepthImageHeight(),
                                                 m_InputHandle->getDepthImageWidth());
         m_SurfaceMeasurer->registerInput(m_InputHandle->getDepth());
@@ -387,7 +497,7 @@ public:
             std::back_inserter(pointsAndNormalsValid), std::logical_and<>());
 
 
-        m_PoseEstimator = new NearestNeighborPoseEstimator();
+        m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
         m_PoseEstimator->setTarget(PoseEstimator::pruneVector(Frame0.points, pointsAndNormalsValid),
                                    PoseEstimator::pruneVector(Frame0.normals, pointsAndNormalsValid));
         m_PoseEstimator->printPoints();
@@ -411,10 +521,16 @@ public:
         std::transform(nextFrame.pointsValid.begin(), nextFrame.pointsValid.end(), nextFrame.normalsValid.begin(),
             std::back_inserter(pointsAndNormalsValid), std::logical_and<>());
 
-
-        m_PoseEstimator = new NearestNeighborPoseEstimator();
         m_PoseEstimator->setSource(PoseEstimator::pruneVector(nextFrame.points, pointsAndNormalsValid),
-                                   PoseEstimator::pruneVector(nextFrame.normals, pointsAndNormalsValid));
+                                   PoseEstimator::pruneVector(nextFrame.normals, pointsAndNormalsValid), 8);
+
+
+        // matrix inverse????
+        Matrix4f currentCamToWorld = m_PoseEstimator->estimatePose();
+        Matrix4f currentPose = currentCamToWorld.inverse();
+
+
+        std::cout << currentPose << std::endl;
 
 
         return false;
@@ -422,14 +538,14 @@ public:
 
 
 private:
-    SurfaceMeasurer* m_SurfaceMeasurer;
-    PoseEstimator* m_PoseEstimator;
+    std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
+    std::unique_ptr<PoseEstimator> m_PoseEstimator;
     SurfaceReconstructor m_SurfaceReconstructor;
     SurfacePredictor m_SurfacePredictor;
 
     InputType* m_InputHandle;
     std::string param;
-    float* tsdf;
+    std::shared_ptr<Tsdf> m_tsdf;
 
 };
 

@@ -16,10 +16,38 @@ int main()
     }
 
     //KiFuModel<VirtualSensor> model(sensor);
-    KiFuModel model(sensor);
-    //model.addInputHandle(sensor);
+    if (1)
+    {
+        Tsdf tsdf(6, 5);
 
-    model.processNextFrame();
+        for (int i = 0; i<6*6*6; ++i)
+        {
+            tsdf(i) = 0;
+        }
+
+        tsdf(0, 0, 0) = 1;
+        tsdf(0, 0, 2) = 2;
+
+        std::cout << tsdf(0,0,0) << std::endl;
+        std::cout << tsdf(6*6) << std::endl << std::endl;
+
+        int in = 6*6*6-1;
+        std::cout << std::get<0>(tsdf.unravel_index(in)) << std::endl;
+        std::cout << std::get<1>(tsdf.unravel_index(in)) << std::endl;
+        std::cout << std::get<2>(tsdf.unravel_index(in)) << std::endl;
+        std::cout << tsdf.ravel_index(tsdf.unravel_index(in)) << std::endl;
+
+
+    }
+
+    if (0)
+    {
+        KiFuModel model(sensor);
+        //model.addInputHandle(sensor);
+
+        model.processNextFrame();
+        model.processNextFrame();
+    }
 
 
 
