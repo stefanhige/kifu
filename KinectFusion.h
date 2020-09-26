@@ -442,6 +442,15 @@ public:
         m_PoseEstimator->setTarget(PoseEstimator::pruneVector(Frame0.points, pointsAndNormalsValid),
                                    PoseEstimator::pruneVector(Frame0.normals, pointsAndNormalsValid));
         m_PoseEstimator->printPoints();
+
+        m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>();
+
+        // set to 64
+        // 512 will be ~500MB ram
+        // 1024 -> 4GB
+        m_tsdf = std::make_shared<Tsdf>(64, 1);
+        m_tsdf->calcVoxelSize(Frame0);
+
     }
 
 
@@ -481,7 +490,7 @@ public:
 private:
     std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
     std::unique_ptr<PoseEstimator> m_PoseEstimator;
-    SurfaceReconstructor m_SurfaceReconstructor;
+    std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
     SurfacePredictor m_SurfacePredictor;
 
     InputType* m_InputHandle;
