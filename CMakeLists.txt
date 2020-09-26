@@ -17,6 +17,7 @@ set(HEADERS
     VirtualSensor.h
     KinectFusion.h
     NearestNeighbor.h
+    DataTypes.h
 )
 
 set(SOURCES

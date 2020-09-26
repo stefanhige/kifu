@@ -5,100 +5,11 @@
 #include "Eigen.h"
 #include "VirtualSensor.h"
 #include "NearestNeighbor.h"
+#include "DataTypes.h"
 
 #include <opencv4/opencv2/core.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-
-struct PointCloud
-{
-    std::vector<Vector3f> points;
-    std::vector<bool> pointsValid;
-    std::vector<Vector3f> normals;
-    std::vector<bool> normalsValid;
-};
-
-
-// truncated signed distance function
-class Tsdf
-{
-public:
-    Tsdf(unsigned int size, float voxelSize)
-        : m_voxelSize(voxelSize)
-    {
-        assert(!(size % 2));
-        m_tsdf = new float[size*size*size];
-        m_size = size;
-    }
-
-    float& operator()(int x, int y, int z)
-    {
-        assert(x < m_size && x >= 0);
-        assert(y < m_size && y >= 0);
-        assert(z < m_size && z >= 0);
-        return m_tsdf[x + y*m_size + z*m_size*m_size];
-    }
-
-    float operator()(int x, int y, int z) const
-    {
-        assert(x < m_size && x >= 0);
-        assert(y < m_size && y >= 0);
-        assert(z < m_size && z >= 0);
-        return m_tsdf[x + y*m_size + z*m_size*m_size];
-    }
-
-    float operator()(Vector3f pos)
-    {
-       Vector3f rel_pos = pos - m_origin;
-       int x = rel_pos.x() / m_voxelSize;
-       int y = rel_pos.y() / m_voxelSize;
-       int z = rel_pos.z() / m_voxelSize;
-       return this->operator()(x, y, z);
-
-    }
-
-    float& operator()(int idx)
-    {
-        return m_tsdf[idx];
-    }
-
-    Vector3f getPoint(int idx)
-    {
-       return Vector3f(0, 0, 0);
-    }
-
-    int ravel_index(int x, int y, int z) const
-    {
-        assert(x < m_size && x >= 0);
-        assert(y < m_size && y >= 0);
-        assert(z < m_size && z >= 0);
-        return x + y*m_size + z*m_size*m_size;
-    }
-
-    int ravel_index(std::tuple<int, int, int> xyz) const
-    {
-        return ravel_index(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz));
-    }
-
-
-     std::tuple<int, int, int> unravel_index(const int idx) const
-    {
-        assert(idx < m_size*m_size*m_size && idx >= 0);
-
-        const int x = idx % m_size;
-        const int z = idx / (m_size*m_size);
-        const int y = (idx / m_size) % m_size;
-
-        return std::tuple<int, int, int>(x, y, z);
-    }
-
-
-private:
-    float* m_tsdf;
-    unsigned int m_size;
-    Vector3f m_origin = Vector3f(0, 0, 0);
-    float m_voxelSize;
-};
 
 // compute surface and normal maps
 class SurfaceMeasurer
@@ -457,10 +368,40 @@ private:
     std::unique_ptr<NearestNeighborSearch> m_nearestNeighborSearch;
 };
 
-
-
 class SurfaceReconstructor
 {
+public:
+
+    SurfaceReconstructor()
+    {
+    }
+
+    SurfaceReconstructor(std::shared_ptr<Tsdf>& tsdf)
+    {
+        m_tsdf = tsdf;
+    }
+
+    void reconstruct(Matrix4f cameraToWorld)
+    {
+
+    Matrix3f cameraIntrinsics;
+
+    // for each point in the tsdf:
+    // loop over idx
+    int idx = 0;
+
+    Vector4f globalPoint = m_tsdf->getPoint(idx);
+    Vector4f cameraPoint = cameraToWorld*globalPoint;
+    Vector3f cameraPoint_ = cameraIntrinsics*cameraPoint.block<3,1>(0,0);
+
+    int x_pixel = floor(cameraPoint_.x()/cameraPoint_.z());
+    int y_pixel = floor(cameraPoint_.y()/cameraPoint_.z());
+
+
+
+    }
+
+
 
 private:
     std::shared_ptr<Tsdf> m_tsdf;
