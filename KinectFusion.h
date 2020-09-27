@@ -376,15 +376,15 @@ public:
     {
     }
 
-    SurfaceReconstructor(std::shared_ptr<Tsdf>& tsdf)
+    SurfaceReconstructor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIntrinsics)
+        : m_tsdf(tsdf),
+          m_cameraIntrinsics(cameraIntrinsics)
+
     {
-        m_tsdf = tsdf;
     }
 
     void reconstruct(Matrix4f cameraToWorld)
     {
-
-    Matrix3f cameraIntrinsics;
 
     // for each point in the tsdf:
     // loop over idx
@@ -392,7 +392,7 @@ public:
 
     Vector4f globalPoint = m_tsdf->getPoint(idx);
     Vector4f cameraPoint = cameraToWorld*globalPoint;
-    Vector3f cameraPoint_ = cameraIntrinsics*cameraPoint.block<3,1>(0,0);
+    Vector3f cameraPoint_ = m_cameraIntrinsics*cameraPoint.block<3,1>(0,0);
 
     int x_pixel = floor(cameraPoint_.x()/cameraPoint_.z());
     int y_pixel = floor(cameraPoint_.y()/cameraPoint_.z());
@@ -405,6 +405,7 @@ public:
 
 private:
     std::shared_ptr<Tsdf> m_tsdf;
+    Matrix3f m_cameraIntrinsics;
 };
 
 class SurfacePredictor
@@ -443,13 +444,13 @@ public:
                                    PoseEstimator::pruneVector(Frame0.normals, pointsAndNormalsValid));
         m_PoseEstimator->printPoints();
 
-        m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>();
-
         // set to 64
         // 512 will be ~500MB ram
         // 1024 -> 4GB
         m_tsdf = std::make_shared<Tsdf>(64, 1);
         m_tsdf->calcVoxelSize(Frame0);
+
+        m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
     }
 

@@ -31,6 +31,7 @@ public:
     }
 
     // set m_voxelSize according to the points
+    // TODO: missing edge cases for pointCloud
     void calcVoxelSize(const PointCloud& pointCloud)
     {
         float x_min = 0, x_max = 0, y_min = 0, y_max = 0, z_min = 0, z_max = 0;

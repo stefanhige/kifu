@@ -16,7 +16,7 @@ int main()
     }
 
     //KiFuModel<VirtualSensor> model(sensor);
-    if (0)
+    if (1)
     {
         Tsdf tsdf(6, 5);
 
@@ -25,8 +25,26 @@ int main()
             tsdf(i) = 0;
         }
 
-        tsdf(0, 0, 0) = 1;
-        tsdf(0, 0, 2) = 2;
+        // test
+        std::vector<Vector3f> points;
+        points.push_back(Vector3f(-1,1,1));
+        points.push_back(Vector3f(2,2,2));
+
+        std::vector<bool> pointsValid;
+        pointsValid.push_back(true);
+        pointsValid.push_back(true);
+
+        PointCloud pointCloud;
+        pointCloud.points = points;
+        pointCloud.normals = points;
+        pointCloud.pointsValid = pointsValid;
+        pointCloud.normalsValid = pointsValid;
+
+        tsdf.calcVoxelSize(pointCloud);
+
+        Vector4f point = tsdf.getPoint(tsdf.ravel_index(0,3,5));
+        std::cout << "point " << point << std::endl << std::endl;
+
 
         std::cout << tsdf(0,0,0) << std::endl;
         std::cout << tsdf(6*6) << std::endl << std::endl;
@@ -40,7 +58,7 @@ int main()
 
     }
 
-    if (1)
+    if (0)
     {
         KiFuModel model(sensor);
         //model.addInputHandle(sensor);
