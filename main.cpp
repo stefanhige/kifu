@@ -16,7 +16,7 @@ int main()
     }
 
     //KiFuModel<VirtualSensor> model(sensor);
-    if (1)
+    if (0)
     {
         Tsdf tsdf(6, 5);
 
@@ -58,10 +58,9 @@ int main()
 
     }
 
-    if (0)
+    if (1)
     {
         KiFuModel model(sensor);
-        //model.addInputHandle(sensor);
 
         //model.processNextFrame();
         //model.processNextFrame();

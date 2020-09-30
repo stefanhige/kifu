@@ -383,24 +383,46 @@ public:
     {
     }
 
-    void reconstruct(Matrix4f cameraToWorld)
+    void reconstruct(const float* rawDepthMap, const unsigned int depthImageHeight, const unsigned int depthImageWidth, const Matrix4f cameraToWorld)
     {
 
-    // for each point in the tsdf:
-    // loop over idx
-    int idx = 0;
+        // for each point in the tsdf:
+        // loop over idx
+        for(int idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
+        {
 
-    Vector4f globalPoint = m_tsdf->getPoint(idx);
-    Vector4f cameraPoint = cameraToWorld*globalPoint;
-    Vector3f cameraPoint_ = m_cameraIntrinsics*cameraPoint.block<3,1>(0,0);
+            Vector4f globalPoint = m_tsdf->getPoint(idx);
+            Vector4f cameraPoint = cameraToWorld*globalPoint;
+            Vector3f cameraPoint_ = m_cameraIntrinsics*cameraPoint.block<3,1>(0,0);
 
-    int x_pixel = floor(cameraPoint_.x()/cameraPoint_.z());
-    int y_pixel = floor(cameraPoint_.y()/cameraPoint_.z());
+            int x_pixel = floor(cameraPoint_.x()/cameraPoint_.z());
+            int y_pixel = floor(cameraPoint_.y()/cameraPoint_.z());
+            float depth;
 
+            if (!(x_pixel < 0 || x_pixel >= depthImageWidth || y_pixel < 0 || y_pixel >= depthImageHeight))
+            {
+                // look up depth value of raw depth map
+                depth = rawDepthMap[x_pixel + depthImageWidth*y_pixel];
 
+                if(depth>=0)
+                {
 
+                    float lambda = (m_cameraIntrinsics.inverse()*Vector3f(x_pixel, y_pixel, 1)).norm();
+
+                    Vector3f translation = (cameraToWorld.inverse()).block<3,1>(0,3);
+
+                    float eta = (translation - (m_tsdf->getPoint(idx)).block<3,1>(0,0)).norm()/ lambda - depth;
+
+                    float mu = 25;
+
+                    float tsdf = eta > -mu ? std::min<float>(1, eta/mu)*((eta > 0) - (eta < 0)) : MINF;
+
+                    std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
+                              << " eta: " << eta << " tsdf: " << tsdf << std::endl;
+                }
+            }
+        }
     }
-
 
 
 private:
@@ -451,6 +473,10 @@ public:
         m_tsdf->calcVoxelSize(Frame0);
 
         m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
+        m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
+                                            m_InputHandle->getDepthImageHeight(),
+                                            m_InputHandle->getDepthImageWidth(),
+                                            Matrix4f::Identity());
 
     }
 

@@ -141,6 +141,11 @@ public:
         return std::tuple<int, int, int>(x, y, z);
     }
 
+    unsigned int getSize()
+    {
+        return m_size;
+    }
+
 
 private:
     float* m_tsdf;
