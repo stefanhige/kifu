@@ -11,6 +11,8 @@ set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/Eigen/ CACHE PATH "Path to Eigen source fo
 # Set C++ flags
 set(CMAKE_CXX_STANDARD 14)
 
+add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
+
 set(HEADERS 
     Eigen.h
     FreeImageHelper.h
@@ -25,11 +27,19 @@ set(SOURCES
     FreeImageHelper.cpp
 )
 
-find_package( OpenCV REQUIRED)
+find_package(OpenCV REQUIRED)
+
+find_package(OpenMP)
+
 
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kifu ${HEADERS} ${SOURCES})
 target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${Flann_INCLUDE_DIR})
-target_link_libraries(kifu general freeimage lz4 ${OpenCV_LIBS})
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(kifu PUBLIC  general freeimage lz4 ${OpenCV_LIBS} OpenMP::OpenMP_CXX)
+else()
+    target_link_libraries(kifu general freeimage lz4 ${OpenCV_LIBS})
+endif()
 
