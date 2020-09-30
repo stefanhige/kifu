@@ -185,11 +185,12 @@ public:
     {
         if (downsample == 1)
         {
-        m_source.points = points;
-        m_source.normals = normals;
+            m_source.points = points;
+            m_source.normals = normals;
 
-        m_source.normalsValid = std::vector<bool>(normals.size(), true);
-        m_source.pointsValid = std::vector<bool>(points.size(), true);}
+            m_source.normalsValid = std::vector<bool>(normals.size(), true);
+            m_source.pointsValid = std::vector<bool>(points.size(), true);
+        }
         else
         {
             int nPoints = std::min(points.size(), normals.size()) / downsample;
@@ -259,7 +260,6 @@ public:
         return output;
     }
 protected:
-    // missing normals
     PointCloud m_target;
     PointCloud m_source;
     int m_nIter = 10;
