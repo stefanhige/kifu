@@ -42,7 +42,7 @@ public:
     {
         float x_min = 0, x_max = 0, y_min = 0, y_max = 0, z_min = 0, z_max = 0;
         bool flag = true;
-        for(int i = 0; i<pointCloud.points.size(); ++i)
+        for(uint i = 0; i<pointCloud.points.size(); ++i)
         {
             if(pointCloud.pointsValid[i] && pointCloud.normalsValid[i])
             {
@@ -154,7 +154,7 @@ public:
 
      std::tuple<int, int, int> unravel_index(const int idx) const
     {
-        assert(idx < m_size*m_size*m_size && idx >= 0);
+        assert(static_cast<uint>(idx) < m_size*m_size*m_size && idx >= 0);
         const int x = idx % m_size;
         const int z = idx / (m_size*m_size);
         const int y = (idx / m_size) % m_size;
@@ -171,7 +171,7 @@ public:
 private:
     float* m_tsdf;
     uint_least8_t* m_weight;
-    unsigned int m_size;
+    uint m_size;
     Vector3f m_origin = Vector3f(0, 0, 0);
     float m_voxelSize;
 };
