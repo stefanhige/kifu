@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <assert.h>
+#include <cstdint>
 #include "Eigen.h"
 
 struct PointCloud
@@ -22,12 +23,17 @@ public:
     {
         assert(!(size % 2));
         m_tsdf = new float[size*size*size];
+
+        // initialize with zeros
+        m_weight = new uint_least8_t[size*size*size]();
+
         m_size = size;
     }
 
     ~Tsdf()
     {
         delete [] m_tsdf;
+        delete [] m_weight;
     }
 
     // set m_voxelSize according to the points
@@ -102,6 +108,22 @@ public:
         return m_tsdf[idx];
     }
 
+    uint_least8_t& weight(const int idx)
+    {
+        return m_weight[idx];
+    }
+
+    uint_least8_t weight(const int idx) const
+    {
+        return m_weight[idx];
+    }
+
+    uint_least8_t max_weight() const
+    {
+        // usually 255
+        return UINT_LEAST8_MAX;
+    }
+
     Vector4f getPoint(const int idx)
     {
        auto indices = unravel_index(idx);
@@ -133,7 +155,6 @@ public:
      std::tuple<int, int, int> unravel_index(const int idx) const
     {
         assert(idx < m_size*m_size*m_size && idx >= 0);
-
         const int x = idx % m_size;
         const int z = idx / (m_size*m_size);
         const int y = (idx / m_size) % m_size;
@@ -149,6 +170,7 @@ public:
 
 private:
     float* m_tsdf;
+    uint_least8_t* m_weight;
     unsigned int m_size;
     Vector3f m_origin = Vector3f(0, 0, 0);
     float m_voxelSize;

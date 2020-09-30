@@ -403,22 +403,27 @@ public:
             {
                 // look up depth value of raw depth map
                 depth = rawDepthMap[x_pixel + depthImageWidth*y_pixel];
-
-                if(depth>=0)
+                // filter out -inf or nan
+                if(std::isgreaterequal(depth, 0))
                 {
-
                     float lambda = (m_cameraIntrinsics.inverse()*Vector3f(x_pixel, y_pixel, 1)).norm();
-
                     Vector3f translation = (cameraToWorld.inverse()).block<3,1>(0,3);
-
-                    float eta = (translation - (m_tsdf->getPoint(idx)).block<3,1>(0,0)).norm()/ lambda - depth;
-
+                    float eta = (translation - (m_tsdf->getPoint(idx)).block<3,1>(0,0)).norm() / lambda - depth;
                     float mu = 25;
 
-                    float tsdf = eta > -mu ? std::min<float>(1, eta/mu)*((eta > 0) - (eta < 0)) : MINF;
+                    if (eta > -mu)
+                    {
+                        //                                     v sign(eta)
+                        float sdf = std::min<float>(1, eta/mu)*((eta > 0) - (eta < 0));
+                        // update tsdf and weight (weight increase is 1)
+                        (*m_tsdf)(idx) = (m_tsdf->weight(idx)*(*m_tsdf)(idx) + sdf) / (m_tsdf->weight(idx) + 1);
 
-                    std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
-                              << " eta: " << eta << " tsdf: " << tsdf << std::endl;
+                        m_tsdf->weight(idx) = (m_tsdf->weight(idx) < m_tsdf->max_weight()) ? m_tsdf->weight(idx) + 1 : m_tsdf->max_weight();
+
+                        std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
+                                  << " eta: " << eta << " tsdf: " << sdf << " weight: " << static_cast<int>(m_tsdf->weight(idx)) << std::endl;
+
+                    }
                 }
             }
         }
