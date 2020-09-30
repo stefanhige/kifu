@@ -15,7 +15,7 @@
 class SurfaceMeasurer
 {
 public:
-    SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, unsigned int DepthImageHeight, unsigned int DepthImageWidth)
+    SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, uint DepthImageHeight, uint DepthImageWidth)
         : m_DepthIntrinsics(DepthIntrinsics),
           m_DepthImageHeight(DepthImageHeight),
           m_DepthImageWidth(DepthImageWidth),
@@ -88,11 +88,11 @@ private:
         float fovY = m_DepthIntrinsics(1, 1);
         float cX = m_DepthIntrinsics(0, 2);
         float cY = m_DepthIntrinsics(1, 2);
-        for(int y = 0; y < m_DepthImageHeight; ++y)
+        for(uint y = 0; y < m_DepthImageHeight; ++y)
         {
-            for(int x = 0; x < m_DepthImageWidth; ++x)
+            for(uint x = 0; x < m_DepthImageWidth; ++x)
             {
-                unsigned int idx = y*m_DepthImageWidth + x;
+                uint idx = y*m_DepthImageWidth + x;
                 const float depth = m_rawDepthMap[idx];
                 if (depth == MINF || depth == NAN)
                 {
@@ -109,11 +109,11 @@ private:
             }
         }
         const float maxDistHalve = 0.05f;
-        for(int y = 1; y < m_DepthImageHeight-1; ++y)
+        for(uint y = 1; y < m_DepthImageHeight-1; ++y)
         {
-            for(int x = 1; x < m_DepthImageWidth-1; ++x)
+            for(uint x = 1; x < m_DepthImageWidth-1; ++x)
             {
-                unsigned int idx = y*m_DepthImageWidth + x;
+                uint idx = y*m_DepthImageWidth + x;
                 const float du = 0.5f * (m_rawDepthMap[idx + 1] - m_rawDepthMap[idx - 1]);
                 const float dv = 0.5f * (m_rawDepthMap[idx + m_DepthImageWidth] - m_rawDepthMap[idx - m_DepthImageWidth]);
                 if (!std::isfinite(du) || !std::isfinite(dv) || std::abs(du) > maxDistHalve || std::abs(dv) > maxDistHalve)
@@ -130,11 +130,11 @@ private:
             }
         }
         // edge regions
-        for (int x = 0; x < m_DepthImageWidth; ++x) {
+        for (uint x = 0; x < m_DepthImageWidth; ++x) {
             m_normalMap[x] = Vector3f(MINF, MINF, MINF);
             m_normalMap[x + (m_DepthImageHeight - 1) * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
         }
-        for (int y = 0; y < m_DepthImageHeight; ++y) {
+        for (uint y = 0; y < m_DepthImageHeight; ++y) {
             m_normalMap[y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
             m_normalMap[(m_DepthImageWidth - 1) + y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
         }
@@ -142,8 +142,8 @@ private:
 
 
     Matrix3f m_DepthIntrinsics;
-    unsigned int m_DepthImageHeight;
-    unsigned int m_DepthImageWidth;
+    uint m_DepthImageHeight;
+    uint m_DepthImageWidth;
     float* m_rawDepthMap;
     std::vector<Vector3f> m_vertexMap;
     std::vector<bool> m_vertexValidityMap;
@@ -223,7 +223,7 @@ public:
         assert((input.size() == validity.size()));
 
         std::vector<Vector3f> output;
-        for (int i = 0; i < input.size(); ++i)
+        for (uint i = 0; i < input.size(); ++i)
         {
             if(validity[i])
             {
@@ -293,7 +293,7 @@ public:
 
             // Add all matches to the sourcePoints and targetPoints vectors,
             // so thath sourcePoints[i] matches targetPoints[i].
-            for (int j = 0; j < transformedPoints.size(); j++)
+            for (uint j = 0; j < transformedPoints.size(); j++)
             {
                 const auto& match = matches[j];
                 if (match.idx >= 0) {
@@ -388,7 +388,9 @@ public:
 
         // for each point in the tsdf:
         // loop over idx
-        for(int idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
+        double begin = omp_get_wtime();
+#pragma omp parallel for
+        for(uint idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
         {
 
             Vector4f globalPoint = m_tsdf->getPoint(idx);
@@ -397,12 +399,11 @@ public:
 
             int x_pixel = floor(cameraPoint_.x()/cameraPoint_.z());
             int y_pixel = floor(cameraPoint_.y()/cameraPoint_.z());
-            float depth;
 
-            if (!(x_pixel < 0 || x_pixel >= depthImageWidth || y_pixel < 0 || y_pixel >= depthImageHeight))
+            if (!(x_pixel < 0 || x_pixel >= static_cast<int>(depthImageWidth) || y_pixel < 0 || y_pixel >= static_cast<int>(depthImageHeight)))
             {
                 // look up depth value of raw depth map
-                depth = rawDepthMap[x_pixel + depthImageWidth*y_pixel];
+                float depth = rawDepthMap[x_pixel + depthImageWidth*y_pixel];
                 // filter out -inf or nan
                 if(std::isgreaterequal(depth, 0))
                 {
@@ -414,19 +415,23 @@ public:
                     if (eta > -mu)
                     {
                         //                                     v sign(eta)
-                        float sdf = std::min<float>(1, eta/mu)*((eta > 0) - (eta < 0));
+                        // float sdf = std::min<float>(1, eta/mu)*((eta > 0) - (eta < 0));
+                        float sdf = std::min<float>(1, eta/mu);
                         // update tsdf and weight (weight increase is 1)
                         (*m_tsdf)(idx) = (m_tsdf->weight(idx)*(*m_tsdf)(idx) + sdf) / (m_tsdf->weight(idx) + 1);
 
                         m_tsdf->weight(idx) = (m_tsdf->weight(idx) < m_tsdf->max_weight()) ? m_tsdf->weight(idx) + 1 : m_tsdf->max_weight();
 
-                        std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
-                                  << " eta: " << eta << " tsdf: " << sdf << " weight: " << static_cast<int>(m_tsdf->weight(idx)) << std::endl;
+                        if (0 && eta<0)
+                            std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
+                                  << " eta: " << eta << " sdf: " << sdf << " weight: " << static_cast<int>(m_tsdf->weight(idx)) << std::endl;
 
                     }
                 }
             }
         }
+        double end = omp_get_wtime();
+        std::cout << "Completed in " << end - begin << " seconds." << std::endl;
     }
 
 
@@ -513,7 +518,6 @@ public:
 
 
         std::cout << currentPose << std::endl;
-
 
         return false;
     }
