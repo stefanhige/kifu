@@ -45,7 +45,7 @@ public:
 		std::cout << "nTargetPoints: " << nTargetPoints << std::endl;
 
 		#pragma omp parallel for
-		for (int i = 0; i < nMatches; i++) {
+        for (uint i = 0; i < nMatches; i++) {
 			matches[i] = getClosestPoint(transformedPoints[i]);
 		}
 
@@ -144,7 +144,7 @@ public:
 		std::vector<Match> matches;
 		matches.reserve(nMatches);
 
-		for (int i = 0; i < nMatches; ++i) {
+        for (uint i = 0; i < nMatches; ++i) {
 			if (*distances[i] <= m_maxDistance)
 				matches.push_back(Match{ *indices[i], 1.f });
 			else
