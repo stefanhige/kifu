@@ -442,6 +442,50 @@ private:
 
 class SurfacePredictor
 {
+public:
+    SurfacePredictor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIntrinsics)
+        : m_tsdf(tsdf),
+          m_cameraIntrinsics(cameraIntrinsics)
+    {
+    }
+
+   PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity())
+   {
+       float fovX = m_cameraIntrinsics(0, 0);
+       float fovY = m_cameraIntrinsics(1, 1);
+       float cX = m_cameraIntrinsics(0, 2);
+       float cY = m_cameraIntrinsics(1, 2);
+
+       Matrix3f rotMatrix = pose.block<3,3>(0,0);
+       Vector3f tranVector = pose.block<3,1>(0,3);
+
+
+       for(uint x_pixel=0; x_pixel<depthImageWidth; ++x_pixel)
+       {
+           for(uint y_pixel=0; y_pixel < depthImageHeight; ++y_pixel)
+           {
+
+               float depth = 1;
+               Vector3f rayDirCamera = Vector3f((x_pixel - cX) / fovX * depth, (y_pixel - cY) / fovY * depth, depth);
+               Vector3f rayDirWorld = (rotMatrix*rayDirCamera).normalized();
+
+               std::cout << rotMatrix << std::endl;
+               std::cout << tranVector << std::endl;
+
+               std::cout << rayDirCamera << std::endl;
+               std::cout << rayDirWorld << std::endl;
+
+               break;
+           }
+           break;
+       }
+
+       return PointCloud();
+   }
+
+private:
+   std::shared_ptr<Tsdf> m_tsdf;
+   Matrix3f m_cameraIntrinsics;
 
 };
 
@@ -488,6 +532,12 @@ public:
                                             m_InputHandle->getDepthImageWidth(),
                                             Matrix4f::Identity());
 
+        m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
+
+        m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
+                                   m_InputHandle->getDepthImageWidth());
+
+        std::cout << "bla" << std::endl;
     }
 
 
@@ -527,7 +577,7 @@ private:
     std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
     std::unique_ptr<PoseEstimator> m_PoseEstimator;
     std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
-    SurfacePredictor m_SurfacePredictor;
+    std::unique_ptr<SurfacePredictor> m_SurfacePredictor;
 
     InputType* m_InputHandle;
     std::string param;
