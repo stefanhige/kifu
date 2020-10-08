@@ -178,6 +178,47 @@ public:
     }
 
 
+    void writeToFile(const std::string &file_name, float tsdf_threshold = 0.1, float weight_threshold = 0)
+    {
+      // number of points in point cloud
+      int num_pts = 0;
+      for (int i = 0; i < m_size * m_size * m_size; ++i)
+      {
+          if (std::abs(m_tsdf[i]) < tsdf_threshold && m_weight[i] > weight_threshold)
+          {
+              num_pts++;
+          }
+      }
+
+      // .ply file header
+      FILE *fp = fopen(file_name.c_str(), "w");
+      fprintf(fp, "ply\n");
+      fprintf(fp, "format binary_little_endian 1.0\n");
+      fprintf(fp, "element vertex %d\n", num_pts);
+      fprintf(fp, "property float x\n");
+      fprintf(fp, "property float y\n");
+      fprintf(fp, "property float z\n");
+      fprintf(fp, "end_header\n");
+
+      // point cloud for ply file
+      for (int i = 0; i < m_size * m_size * m_size; ++i)
+      {
+        if (std::abs(m_tsdf[i]) < tsdf_threshold && m_weight[i] > weight_threshold)
+        {
+          std::tuple<int, int, int> xyz = unravel_index(i);
+          float pt_base_x = m_origin.x() + std::get<0>(xyz) * m_voxelSize;
+          float pt_base_y = m_origin.y() + std::get<1>(xyz) * m_voxelSize;
+          float pt_base_z = m_origin.z() + std::get<2>(xyz) * m_voxelSize;
+          fwrite(&pt_base_x, sizeof(float), 1, fp);
+          fwrite(&pt_base_y, sizeof(float), 1, fp);
+          fwrite(&pt_base_z, sizeof(float), 1, fp);
+        }
+      }
+      fclose(fp);
+    }
+
+
+
 private:
     float* m_tsdf;
     uint_least8_t* m_weight;
