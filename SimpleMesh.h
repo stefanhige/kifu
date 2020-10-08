@@ -120,7 +120,7 @@ public:
 		}
 	}
 
-    SimpleMesh(PointCloud pointCloud, unsigned int depthImageHeight, unsigned int depthImageWidth, float edgeThreshold = 0.01f)
+    SimpleMesh(PointCloud pointCloud, unsigned int depthImageHeight, unsigned int depthImageWidth, bool computeFaces = false, float edgeThreshold = 0.01f)
     {
          m_vertices.resize(pointCloud.points.size());
          for(int idx=0; idx<pointCloud.points.size(); ++idx)
@@ -138,40 +138,43 @@ public:
 
          }
 
-         // Compute triangles (faces).
-         m_triangles.reserve((depthImageHeight - 1) * (depthImageWidth - 1) * 2);
-         for (unsigned int i = 0; i < depthImageHeight - 1; i++)
+         if(computeFaces)
          {
-             for (unsigned int j = 0; j < depthImageWidth - 1; j++)
+             // Compute triangles (faces).
+             m_triangles.reserve((depthImageHeight - 1) * (depthImageWidth - 1) * 2);
+             for (unsigned int i = 0; i < depthImageHeight - 1; i++)
              {
-                 unsigned int i0 = i*depthImageWidth + j;
-                 unsigned int i1 = (i + 1)*depthImageWidth + j;
-                 unsigned int i2 = i*depthImageWidth + j + 1;
-                 unsigned int i3 = (i + 1)*depthImageWidth + j + 1;
-
-                 bool valid0 = m_vertices[i0].position.allFinite();
-                 bool valid1 = m_vertices[i1].position.allFinite();
-                 bool valid2 = m_vertices[i2].position.allFinite();
-                 bool valid3 = m_vertices[i3].position.allFinite();
-
-                 if (valid0 && valid1 && valid2)
+                 for (unsigned int j = 0; j < depthImageWidth - 1; j++)
                  {
-                     float d0 = (m_vertices[i0].position - m_vertices[i1].position).norm();
-                     float d1 = (m_vertices[i0].position - m_vertices[i2].position).norm();
-                     float d2 = (m_vertices[i1].position - m_vertices[i2].position).norm();
-                     if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
+                     unsigned int i0 = i*depthImageWidth + j;
+                     unsigned int i1 = (i + 1)*depthImageWidth + j;
+                     unsigned int i2 = i*depthImageWidth + j + 1;
+                     unsigned int i3 = (i + 1)*depthImageWidth + j + 1;
+
+                     bool valid0 = m_vertices[i0].position.allFinite();
+                     bool valid1 = m_vertices[i1].position.allFinite();
+                     bool valid2 = m_vertices[i2].position.allFinite();
+                     bool valid3 = m_vertices[i3].position.allFinite();
+
+                     if (valid0 && valid1 && valid2)
                      {
-                         addFace(i0, i1, i2);
+                         float d0 = (m_vertices[i0].position - m_vertices[i1].position).norm();
+                         float d1 = (m_vertices[i0].position - m_vertices[i2].position).norm();
+                         float d2 = (m_vertices[i1].position - m_vertices[i2].position).norm();
+                         if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
+                         {
+                             addFace(i0, i1, i2);
+                         }
                      }
-                 }
-                 if (valid1 && valid2 && valid3)
-                 {
-                     float d0 = (m_vertices[i3].position - m_vertices[i1].position).norm();
-                     float d1 = (m_vertices[i3].position - m_vertices[i2].position).norm();
-                     float d2 = (m_vertices[i1].position - m_vertices[i2].position).norm();
-                     if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
+                     if (valid1 && valid2 && valid3)
                      {
-                         addFace(i1, i3, i2);
+                         float d0 = (m_vertices[i3].position - m_vertices[i1].position).norm();
+                         float d1 = (m_vertices[i3].position - m_vertices[i2].position).norm();
+                         float d2 = (m_vertices[i1].position - m_vertices[i2].position).norm();
+                         if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
+                         {
+                             addFace(i1, i3, i2);
+                         }
                      }
                  }
              }
