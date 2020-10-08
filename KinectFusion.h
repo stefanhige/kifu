@@ -502,22 +502,28 @@ public:
                    prev_sdf = sdf;
                    sdf = trilinear_interpolate(currPoint);
 
-                   if ((prev_sdf < 0 && sdf > 0 ) || (prev_sdf == 0 && sdf > 0) || (prev_sdf < 0 && sdf == 0))
+
+                   if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
                    {
                        // found a surface
                        std::cout << "SURF " << prev_sdf << " -> " << sdf << std::endl;
-                       pointCloud.points.push_back(Vector3f(0, 0, 0));
+
+
+                       float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
+                       Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
+
+                       pointCloud.points.push_back(surfaceVertex);
                        pointCloud.pointsValid.push_back(true);
                        found_sign_change = true;
                        break;
 
                    }
-                   else if((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
+                   else if ((prev_sdf < 0 && sdf > 0 ) || (prev_sdf == 0 && sdf > 0) || (prev_sdf < 0 && sdf == 0))
                    {
                        // surface from behind
                        // found a surface
                        std::cout << "BACKSURF " << prev_sdf << " -> " << sdf << std::endl;
-                       pointCloud.points.push_back(Vector3f(0, 0, 0));
+                       pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
                        pointCloud.pointsValid.push_back(false);
                        found_sign_change = true;
                        break;
@@ -529,7 +535,7 @@ public:
                }
                if(!found_sign_change)
                {
-                   pointCloud.points.push_back(Vector3f(0, 0, 0));
+                   pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
                    pointCloud.pointsValid.push_back(false);
                }
            }
