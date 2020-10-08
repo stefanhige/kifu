@@ -124,7 +124,7 @@ public:
         return UINT_LEAST8_MAX;
     }
 
-    Vector4f getPoint(const int idx)
+    Vector4f getPoint(const int idx) const
     {
        auto indices = unravel_index(idx);
        int x = std::get<0>(indices);
@@ -135,6 +135,16 @@ public:
                        y*m_voxelSize + m_origin.y(),
                        z*m_voxelSize + m_origin.z(),
                        1);
+    }
+
+    Vector3f getOrigin() const
+    {
+        return m_origin;
+    }
+
+    float getVoxelSize() const
+    {
+        return m_voxelSize;
     }
 
 
