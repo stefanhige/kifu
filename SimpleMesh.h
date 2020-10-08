@@ -4,6 +4,8 @@
 #include <fstream>
 
 #include "Eigen.h"
+#include "VirtualSensor.h"
+#include "DataTypes.h"
 
 struct Vertex {
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -33,7 +35,7 @@ public:
 	/**
 	 * Constructs a mesh from the current color and depth image.
 	 */
-	SimpleMesh(VirtualSensor& sensor, const Matrix4f& cameraPose, float edgeThreshold = 0.01f) {
+    SimpleMesh(VirtualSensor& sensor, const Matrix4f& cameraPose, float edgeThreshold = 0.01f) {
 		// Get ptr to the current depth frame.
 		// Depth is stored in row major (get dimensions via sensor.GetDepthImageWidth() / GetDepthImageHeight()).
 		float* depthMap = sensor.getDepth();
@@ -117,6 +119,64 @@ public:
 			}
 		}
 	}
+
+    SimpleMesh(PointCloud pointCloud, unsigned int depthImageHeight, unsigned int depthImageWidth, float edgeThreshold = 0.01f)
+    {
+         m_vertices.resize(pointCloud.points.size());
+         for(int idx=0; idx<pointCloud.points.size(); ++idx)
+         {
+             if (pointCloud.points[idx].allFinite())
+             {
+                 m_vertices[idx].position = Vector4f(pointCloud.points[idx].x(), pointCloud.points[idx].y(), pointCloud.points[idx].z(), 1);
+                 m_vertices[idx].color = Vector4uc(0, 0, 0, 0);
+             }
+             else
+             {
+                 m_vertices[idx].position = Vector4f(MINF, MINF, MINF, MINF);
+                 m_vertices[idx].color = Vector4uc(0, 0, 0, 0);
+             }
+
+         }
+
+         // Compute triangles (faces).
+         m_triangles.reserve((depthImageHeight - 1) * (depthImageWidth - 1) * 2);
+         for (unsigned int i = 0; i < depthImageHeight - 1; i++)
+         {
+             for (unsigned int j = 0; j < depthImageWidth - 1; j++)
+             {
+                 unsigned int i0 = i*depthImageWidth + j;
+                 unsigned int i1 = (i + 1)*depthImageWidth + j;
+                 unsigned int i2 = i*depthImageWidth + j + 1;
+                 unsigned int i3 = (i + 1)*depthImageWidth + j + 1;
+
+                 bool valid0 = m_vertices[i0].position.allFinite();
+                 bool valid1 = m_vertices[i1].position.allFinite();
+                 bool valid2 = m_vertices[i2].position.allFinite();
+                 bool valid3 = m_vertices[i3].position.allFinite();
+
+                 if (valid0 && valid1 && valid2)
+                 {
+                     float d0 = (m_vertices[i0].position - m_vertices[i1].position).norm();
+                     float d1 = (m_vertices[i0].position - m_vertices[i2].position).norm();
+                     float d2 = (m_vertices[i1].position - m_vertices[i2].position).norm();
+                     if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
+                     {
+                         addFace(i0, i1, i2);
+                     }
+                 }
+                 if (valid1 && valid2 && valid3)
+                 {
+                     float d0 = (m_vertices[i3].position - m_vertices[i1].position).norm();
+                     float d1 = (m_vertices[i3].position - m_vertices[i2].position).norm();
+                     float d2 = (m_vertices[i1].position - m_vertices[i2].position).norm();
+                     if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
+                     {
+                         addFace(i1, i3, i2);
+                     }
+                 }
+             }
+         }
+    }
 
 	void clear() {
 		m_vertices.clear();
