@@ -7,6 +7,9 @@
 #include "NearestNeighbor.h"
 #include "DataTypes.h"
 
+// debug
+#include "SimpleMesh.h"
+
 #include <opencv4/opencv2/core.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -410,7 +413,7 @@ public:
                     float lambda = (m_cameraIntrinsics.inverse()*Vector3f(x_pixel, y_pixel, 1)).norm();
                     Vector3f translation = (cameraToWorld.inverse()).block<3,1>(0,3);
                     float eta = (translation - (m_tsdf->getPoint(idx)).block<3,1>(0,0)).norm() / lambda - depth;
-                    float mu = 25;
+                    float mu = 1;
 
                     if (eta > -mu)
                     {
@@ -476,7 +479,7 @@ public:
                float min_t = compute_min_t(rayOriginWorld, rayDirWorld);
                float max_t = compute_max_t(rayOriginWorld, rayDirWorld);
 
-               float mu = 25;
+               float mu = 1;
                float t_step_size = 0.05; // function of truncation distance
 
                // loop
@@ -506,7 +509,7 @@ public:
                    if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
                    {
                        // found a surface
-                       std::cout << "SURF " << prev_sdf << " -> " << sdf << std::endl;
+                       //std::cout << "SURF " << prev_sdf << " -> " << sdf << std::endl;
 
 
                        float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
@@ -522,7 +525,7 @@ public:
                    {
                        // surface from behind
                        // found a surface
-                       std::cout << "BACKSURF " << prev_sdf << " -> " << sdf << std::endl;
+                       //std::cout << "BACKSURF " << prev_sdf << " -> " << sdf << std::endl;
                        pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
                        pointCloud.pointsValid.push_back(false);
                        found_sign_change = true;
@@ -667,7 +670,7 @@ public:
         // set to 64
         // 512 will be ~500MB ram
         // 1024 -> 4GB
-        m_tsdf = std::make_shared<Tsdf>(64, 1);
+        m_tsdf = std::make_shared<Tsdf>(128, 1);
         m_tsdf->calcVoxelSize(Frame0);
 
         m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
@@ -676,11 +679,28 @@ public:
                                             m_InputHandle->getDepthImageWidth(),
                                             Matrix4f::Identity());
 
+        m_tsdf->writeToFile("tsdf-test.ply", 0.01, 0);
+
         m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
         PointCloud Frame0_predicted = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
                                         m_InputHandle->getDepthImageWidth());
 
+        Matrix4f pose = Matrix4f::Identity();
+        //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
+
+        SimpleMesh Frame0_predicted_mesh(Frame0_predicted,
+                                         m_InputHandle->getDepthImageHeight(),
+                                         m_InputHandle->getDepthImageWidth(),
+                                         1);
+
+
+        SimpleMesh Frame0_mesh(Frame0,
+                               m_InputHandle->getDepthImageHeight(),
+                               m_InputHandle->getDepthImageWidth());
+
+        Frame0_mesh.writeMesh("Frame0_mesh.off");
+        Frame0_predicted_mesh.writeMesh("Frame0_predicted_mesh.off");
         std::cout << "bla" << std::endl;
     }
 
