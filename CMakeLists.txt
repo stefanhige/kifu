@@ -20,6 +20,7 @@ set(HEADERS
     KinectFusion.h
     NearestNeighbor.h
     DataTypes.h
+    SimpleMesh.h
 )
 
 set(SOURCES
