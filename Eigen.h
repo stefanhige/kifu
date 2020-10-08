@@ -6,7 +6,7 @@
 #endif
 
 #ifndef ASSERT
-#define ASSERT(a) {if (!a) { std::cerr << "Error:\nFile: " << __FILE__ << "\nLine: " << __LINE__ << "\nFunction: " << __FUNCTION__ << std::endl; while(1); }}
+#define ASSERT(a) {if (!(a)) { std::cerr << "Error:\nFile: " << __FILE__ << "\nLine: " << __LINE__ << "\nFunction: " << __FUNCTION__ << std::endl; while(1); }}
 #endif
 
 #ifndef SAFE_DELETE
