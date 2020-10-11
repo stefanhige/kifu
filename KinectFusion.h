@@ -478,13 +478,13 @@ public:
        Vector3f tranVector = pose.block<3,1>(0,3);
 
        PointCloud pointCloud;
-       pointCloud.pointsValid.reserve(depthImageHeight*depthImageWidth);
-       pointCloud.points.reserve(depthImageHeight*depthImageWidth);
-       pointCloud.normalsValid.reserve(depthImageHeight*depthImageWidth);
-       pointCloud.normals.reserve(depthImageHeight*depthImageWidth);
+       pointCloud.pointsValid.resize(depthImageHeight*depthImageWidth);
+       pointCloud.points.resize(depthImageHeight*depthImageWidth);
+       pointCloud.normalsValid.resize(depthImageHeight*depthImageWidth);
+       pointCloud.normals.resize(depthImageHeight*depthImageWidth);
 
        auto begin = tic();
-       #pragma omp parallel for
+       //#pragma omp parallel for
        // collapse(2) seems to make it slower
        for(uint y_pixel=0; y_pixel<depthImageHeight; ++y_pixel)
        {
@@ -711,9 +711,7 @@ public:
                                         m_InputHandle->getDepthImageWidth());
 
         Matrix4f pose = Matrix4f::Identity();
-        //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
-
-        /*
+        /* DEBUG
         SimpleMesh Frame0_predicted_mesh(Frame0_predicted,
                                          m_InputHandle->getDepthImageHeight(),
                                          m_InputHandle->getDepthImageWidth(),
@@ -723,6 +721,8 @@ public:
         SimpleMesh Frame0_mesh(Frame0,
                                m_InputHandle->getDepthImageHeight(),
                                m_InputHandle->getDepthImageWidth());
+
+        //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
 
         Frame0_mesh.writeMesh("Frame0_mesh.off");
         Frame0_predicted_mesh.writeMesh("Frame0_predicted_mesh.off");
