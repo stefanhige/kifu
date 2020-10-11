@@ -12,6 +12,8 @@
 // debug
 #include "SimpleMesh.h"
 
+#define tic() (omp_get_wtime())
+#define toc(a) (printf("%s, %i: dur %f s\n", __FILE__, __LINE__, omp_get_wtime() - a))
 
 // compute surface and normal maps
 class SurfaceMeasurer
@@ -96,6 +98,9 @@ private:
         float fovY = m_DepthIntrinsics(1, 1);
         float cX = m_DepthIntrinsics(0, 2);
         float cY = m_DepthIntrinsics(1, 2);
+
+        auto begin = tic();
+        #pragma omp parallel for collapse(2)
         for(uint y = 0; y < m_DepthImageHeight; ++y)
         {
             for(uint x = 0; x < m_DepthImageWidth; ++x)
@@ -116,7 +121,11 @@ private:
 
             }
         }
+        toc(begin);
+
         const float maxDistHalve = 0.05f;
+        begin = tic();
+        #pragma omp parallel for collapse(2)
         for(uint y = 1; y < m_DepthImageHeight-1; ++y)
         {
             for(uint x = 1; x < m_DepthImageWidth-1; ++x)
@@ -137,6 +146,7 @@ private:
                 }
             }
         }
+        toc(begin);
         // edge regions
         for (uint x = 0; x < m_DepthImageWidth; ++x) {
             m_normalMap[x] = Vector3f(MINF, MINF, MINF);
@@ -396,7 +406,7 @@ public:
 
         // for each point in the tsdf:
         // loop over idx
-        double begin = omp_get_wtime();
+        double begin = tic();
 
         #pragma omp parallel for
         for(uint idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
@@ -439,8 +449,7 @@ public:
                 }
             }
         }
-        double end = omp_get_wtime();
-        std::cout << "Completed in " << end - begin << " seconds." << std::endl;
+        toc(begin);
     }
 
 
@@ -469,11 +478,19 @@ public:
        Vector3f tranVector = pose.block<3,1>(0,3);
 
        PointCloud pointCloud;
+       pointCloud.pointsValid.reserve(depthImageHeight*depthImageWidth);
+       pointCloud.points.reserve(depthImageHeight*depthImageWidth);
+       pointCloud.normalsValid.reserve(depthImageHeight*depthImageWidth);
+       pointCloud.normals.reserve(depthImageHeight*depthImageWidth);
 
-       for(uint x_pixel=0; x_pixel<depthImageWidth; ++x_pixel)
+       auto begin = tic();
+       #pragma omp parallel for
+       // collapse(2) seems to make it slower
+       for(uint y_pixel=0; y_pixel<depthImageHeight; ++y_pixel)
        {
-           for(uint y_pixel=0; y_pixel < depthImageHeight; ++y_pixel)
+           for(uint x_pixel=0; x_pixel < depthImageWidth; ++x_pixel)
            {
+               uint idx = y_pixel*depthImageWidth + x_pixel;
 
                float depth = 1;
                Vector3f rayDirCamera = Vector3f((x_pixel - cX) / fovX * depth, (y_pixel - cY) / fovY * depth, depth);
@@ -518,8 +535,11 @@ public:
                        float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
                        Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
 
-                       pointCloud.points.push_back(surfaceVertex);
-                       pointCloud.pointsValid.push_back(true);
+                       pointCloud.points[idx] = surfaceVertex;
+                       pointCloud.pointsValid[idx] = true;
+                       //pointCloud.points.push_back(surfaceVertex);
+                       //pointCloud.pointsValid.push_back(true);
+
                        found_sign_change = true;
                        break;
 
@@ -527,8 +547,11 @@ public:
                    else if ((prev_sdf < 0 && sdf > 0 ) || (prev_sdf == 0 && sdf > 0) || (prev_sdf < 0 && sdf == 0))
                    {
                        // back of surface
-                       pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
-                       pointCloud.pointsValid.push_back(false);
+                       pointCloud.points[idx] = Vector3f(MINF, MINF, MINF);
+                       pointCloud.pointsValid[idx] = false;
+
+                       //pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
+                       //pointCloud.pointsValid.push_back(false);
                        found_sign_change = true;
                        break;
                    }
@@ -539,11 +562,12 @@ public:
                }
                if(!found_sign_change)
                {
-                   pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
-                   pointCloud.pointsValid.push_back(false);
+                   pointCloud.points[idx] = Vector3f(MINF, MINF, MINF);
+                   pointCloud.pointsValid[idx] = false;
                }
            }
        }
+       toc(begin);
 
        return pointCloud;
    }
