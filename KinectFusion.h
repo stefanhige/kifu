@@ -392,7 +392,7 @@ public:
         // for each point in the tsdf:
         // loop over idx
         double begin = omp_get_wtime();
-#pragma omp parallel for
+#pragma acc parallel loop
         for(uint idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
         {
 
@@ -480,6 +480,8 @@ public:
                float max_t = compute_max_t(rayOriginWorld, rayDirWorld);
 
                float mu = 1;
+               //std::cout << mu << std::endl;
+
                float t_step_size = 0.05; // function of truncation distance
 
                // loop
