@@ -66,15 +66,15 @@ public:
                 z_min = (pointCloud.points[i].z() < z_min) ? pointCloud.points[i].z() : z_min;
             }
         }
-        std::cout << "x " << x_min << " " << x_max << std::endl;
-        std::cout << "y " << y_min << " " << y_max << std::endl;
-        std::cout << "z " << z_min << " " << z_max << std::endl;
+        //std::cout << "x " << x_min << " " << x_max << std::endl;
+        //std::cout << "y " << y_min << " " << y_max << std::endl;
+        //std::cout << "z " << z_min << " " << z_max << std::endl;
 
         m_origin = Vector3f(x_min, y_min, z_min);
         float max_span = std::max({x_max - x_min, y_max - y_min, z_max - z_min});
-        std::cout << max_span << std::endl;
+        //std::cout << max_span << std::endl;
         m_voxelSize = max_span / (m_size - 1);
-        std::cout << m_voxelSize << std::endl;
+        //std::cout << m_voxelSize << std::endl;
     }
 
     float& operator()(int x, int y, int z)

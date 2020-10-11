@@ -28,11 +28,7 @@ set(SOURCES
     FreeImageHelper.cpp
 )
 
-find_package(OpenCV REQUIRED)
-
 find_package(OpenMP)
-
-
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kifu ${HEADERS} ${SOURCES})

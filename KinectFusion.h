@@ -2,6 +2,8 @@
 
 #include <string>
 #include <assert.h>
+#include <memory>
+
 #include "Eigen.h"
 #include "VirtualSensor.h"
 #include "NearestNeighbor.h"
@@ -10,9 +12,6 @@
 // debug
 #include "SimpleMesh.h"
 
-#include <opencv4/opencv2/core.hpp>
-#include <opencv4/opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 
 // compute surface and normal maps
 class SurfaceMeasurer
@@ -35,25 +34,30 @@ public:
 
     void smoothInput()
     {
+        /*
         cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
         cv::Mat rawDepthMapCopy = rawDepthMap.clone();
         cv::bilateralFilter(rawDepthMapCopy, rawDepthMap, 5, 10, 10);
+        */
 
     }
     void process()
     {
         computeVertexAndNormalMap();
-        std::cout << "size" << m_vertexMap.size() << std::endl;
+        //std::cout << "size " << m_vertexMap.size() << std::endl;
     }
 
     void printDepthMap()
     {
+        /*
         cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
         std::cout << rawDepthMap;
+        */
     }
 
     void displayDepthMap()
     {
+        /*
         // TODO
         cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
         cv::Mat normDepthMap;
@@ -68,6 +72,7 @@ public:
         cv::Mat test = cv::Mat::zeros(100,100,CV_32F);
         cv::imshow(windowName, rawDepthMap);
         cv::waitKey(0);
+        */
     }
 
     PointCloud getPointCloud()
@@ -392,7 +397,8 @@ public:
         // for each point in the tsdf:
         // loop over idx
         double begin = omp_get_wtime();
-#pragma omp parallel for
+
+        #pragma omp parallel for
         for(uint idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
         {
 
@@ -425,9 +431,9 @@ public:
 
                         m_tsdf->weight(idx) = (m_tsdf->weight(idx) < m_tsdf->max_weight()) ? m_tsdf->weight(idx) + 1 : m_tsdf->max_weight();
 
-                        if (0 && eta<0)
-                            std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
-                                  << " eta: " << eta << " sdf: " << sdf << " weight: " << static_cast<int>(m_tsdf->weight(idx)) << std::endl;
+                        //if (0 && eta<0)
+                        //    std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
+                        //          << " eta: " << eta << " sdf: " << sdf << " weight: " << static_cast<int>(m_tsdf->weight(idx)) << std::endl;
 
                     }
                 }
@@ -509,9 +515,6 @@ public:
                    if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
                    {
                        // found a surface
-                       //std::cout << "SURF " << prev_sdf << " -> " << sdf << std::endl;
-
-
                        float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
                        Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
 
@@ -523,9 +526,7 @@ public:
                    }
                    else if ((prev_sdf < 0 && sdf > 0 ) || (prev_sdf == 0 && sdf > 0) || (prev_sdf < 0 && sdf == 0))
                    {
-                       // surface from behind
-                       // found a surface
-                       //std::cout << "BACKSURF " << prev_sdf << " -> " << sdf << std::endl;
+                       // back of surface
                        pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
                        pointCloud.pointsValid.push_back(false);
                        found_sign_change = true;
@@ -665,7 +666,6 @@ public:
         m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
         m_PoseEstimator->setTarget(PoseEstimator::pruneVector(Frame0.points, pointsAndNormalsValid),
                                    PoseEstimator::pruneVector(Frame0.normals, pointsAndNormalsValid));
-        m_PoseEstimator->printPoints();
 
         // set to 64
         // 512 will be ~500MB ram
@@ -679,7 +679,7 @@ public:
                                             m_InputHandle->getDepthImageWidth(),
                                             Matrix4f::Identity());
 
-        m_tsdf->writeToFile("tsdf-test.ply", 0.01, 0);
+        //m_tsdf->writeToFile("tsdf-test.ply", 0.01, 0);
 
         m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
@@ -689,6 +689,7 @@ public:
         Matrix4f pose = Matrix4f::Identity();
         //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
 
+        /*
         SimpleMesh Frame0_predicted_mesh(Frame0_predicted,
                                          m_InputHandle->getDepthImageHeight(),
                                          m_InputHandle->getDepthImageWidth(),
@@ -701,7 +702,8 @@ public:
 
         Frame0_mesh.writeMesh("Frame0_mesh.off");
         Frame0_predicted_mesh.writeMesh("Frame0_predicted_mesh.off");
-        std::cout << "bla" << std::endl;
+        */
+
     }
 
 
