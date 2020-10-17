@@ -13,19 +13,30 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
 
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src/utils)
+
 set(HEADERS
-    Eigen.h
-    FreeImageHelper.h
-    VirtualSensor.h
+    src/utils/Eigen.h
+    src/utils/FreeImageHelper.h
+    src/utils/VirtualSensor.h
     KinectFusion.h
-    NearestNeighbor.h
-    DataTypes.h
-    SimpleMesh.h
+    src/utils/NearestNeighbor.h
+    src/DataTypes.h
+    src/utils/SimpleMesh.h
+    src/SurfaceReconstructor.h
+    src/SurfaceMeasurer.h
+    src/PoseEstimator.h
+    src/SurfacePredictor.h
 )
 
 set(SOURCES
     main.cpp
-    FreeImageHelper.cpp
+    src/utils/FreeImageHelper.cpp
+    src/SurfaceReconstructor.cpp
+    src/SurfaceMeasurer.cpp
+    src/PoseEstimator.cpp
+    src/SurfacePredictor.cpp
 )
 
 find_package(OpenMP)

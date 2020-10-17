@@ -6,6 +6,9 @@
 #include <cstdint>
 #include "Eigen.h"
 
+#define tic() (omp_get_wtime())
+#define toc(a) (printf("%s, %i: dur %f s\n", __FILE__, __LINE__, omp_get_wtime() - a))
+
 struct PointCloud
 {
     std::vector<Vector3f> points;
