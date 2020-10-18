@@ -16,7 +16,6 @@ int main()
     }
 
     KiFuModel model(sensor);
-
-    //model.processNextFrame();
+    model.processNextFrame();
     return 0;
 }

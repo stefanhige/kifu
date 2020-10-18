@@ -39,18 +39,14 @@ void SurfaceReconstructor::reconstruct(const float* rawDepthMap, const unsigned 
 
                 if (eta > -mu)
                 {
-                    //                                     v sign(eta)
-                    // float sdf = std::min<float>(1, eta/mu)*((eta > 0) - (eta < 0));
-                    float sdf = std::min<float>(1, eta/mu);
+                    //                                                v -sign(eta)
+                    float sdf = std::min<float>(1, std::abs(eta)/mu)*((eta < 0) - (eta > 0));
+
+                    //float sdf = std::min<float>(1, eta/mu);
                     // update tsdf and weight (weight increase is 1)
                     (*m_tsdf)(idx) = (m_tsdf->weight(idx)*(*m_tsdf)(idx) + sdf) / (m_tsdf->weight(idx) + 1);
 
                     m_tsdf->weight(idx) = (m_tsdf->weight(idx) < m_tsdf->max_weight()) ? m_tsdf->weight(idx) + 1 : m_tsdf->max_weight();
-
-                    //if (0 && eta<0)
-                    //    std::cout << "x: " << x_pixel << " y: " << y_pixel << " depth: " << depth << " lambda: " << lambda
-                    //          << " eta: " << eta << " sdf: " << sdf << " weight: " << static_cast<int>(m_tsdf->weight(idx)) << std::endl;
-
                 }
             }
         }

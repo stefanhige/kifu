@@ -25,7 +25,11 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
    auto begin = tic();
    //#pragma omp parallel for
    // collapse(2) seems to make it slower
-   for(uint y_pixel=0; y_pixel<depthImageHeight; ++y_pixel)
+//   for(uint y_pixel=480/2-1; y_pixel < 480/2; ++y_pixel)
+//   {
+//       for(uint x_pixel=640/2-1; x_pixel < 640/2; ++x_pixel)
+//       {
+   for(uint y_pixel=0; y_pixel < depthImageHeight; ++y_pixel)
    {
        for(uint x_pixel=0; x_pixel < depthImageWidth; ++x_pixel)
        {
@@ -41,8 +45,7 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
            float min_t = compute_min_t(rayOriginWorld, rayDirWorld);
            float max_t = compute_max_t(rayOriginWorld, rayDirWorld);
 
-           float mu = 1;
-           float t_step_size = 0.05; // function of truncation distance
+           float t_step_size = 0.01; // function of truncation distance
 
            // loop
            float prev_sdf;
@@ -55,8 +58,6 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
            {
                Vector3f currPoint = rayOriginWorld + t * rayDirWorld;
 
-               //Vector3f relPoint = currPoint - m_tsdf->getOrigin();
-
                if(is_first_sdf)
                {
                    sdf = trilinear_interpolate(currPoint);
@@ -67,7 +68,6 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
                prev_sdf = sdf;
                sdf = trilinear_interpolate(currPoint);
 
-
                if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
                {
                    // found a surface
@@ -76,9 +76,6 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
 
                    pointCloud.points[idx] = surfaceVertex;
                    pointCloud.pointsValid[idx] = true;
-                   //pointCloud.points.push_back(surfaceVertex);
-                   //pointCloud.pointsValid.push_back(true);
-
                    found_sign_change = true;
                    break;
 
@@ -88,9 +85,6 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
                    // back of surface
                    pointCloud.points[idx] = Vector3f(MINF, MINF, MINF);
                    pointCloud.pointsValid[idx] = false;
-
-                   //pointCloud.points.push_back(Vector3f(MINF, MINF, MINF));
-                   //pointCloud.pointsValid.push_back(false);
                    found_sign_change = true;
                    break;
                }
@@ -154,6 +148,13 @@ float SurfacePredictor::trilinear_interpolate(const Vector3f point) const
             for(int k=0; k<2; ++k)
             {
                 p += u[i] * v[j] * w[k] * (*m_tsdf)(x_0+i, y_0+j, z_0+k);
+
+                // at least one of the used points has weight zero
+                if(!m_tsdf->weight(m_tsdf->ravel_index(x_0+i, y_0+j, z_0+k)))
+                {
+                    // no distance information available
+                    return std::numeric_limits<float>::max();
+                }
             }
         }
     }

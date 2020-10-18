@@ -49,7 +49,7 @@ public:
         // set to 64
         // 512 will be ~500MB ram
         // 1024 -> 4GB
-        m_tsdf = std::make_shared<Tsdf>(128, 1);
+        m_tsdf = std::make_shared<Tsdf>(256, 1);
         m_tsdf->calcVoxelSize(Frame0);
 
         m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
@@ -58,7 +58,7 @@ public:
                                             m_InputHandle->getDepthImageWidth(),
                                             Matrix4f::Identity());
 
-        //m_tsdf->writeToFile("tsdf-test.ply", 0.01, 0);
+        m_tsdf->writeToFile("tsdf-test.ply", 0.01, 0);
 
         m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
@@ -66,22 +66,23 @@ public:
                                         m_InputHandle->getDepthImageWidth());
 
         Matrix4f pose = Matrix4f::Identity();
-        /* DEBUG
+
         SimpleMesh Frame0_predicted_mesh(Frame0_predicted,
                                          m_InputHandle->getDepthImageHeight(),
                                          m_InputHandle->getDepthImageWidth(),
-                                         1);
+                                         true);
 
 
         SimpleMesh Frame0_mesh(Frame0,
                                m_InputHandle->getDepthImageHeight(),
-                               m_InputHandle->getDepthImageWidth());
+                               m_InputHandle->getDepthImageWidth(),
+                               true);
 
         //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
 
         Frame0_mesh.writeMesh("Frame0_mesh.off");
         Frame0_predicted_mesh.writeMesh("Frame0_predicted_mesh.off");
-        */
+
 
     }
 
