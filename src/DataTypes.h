@@ -6,8 +6,15 @@
 #include <cstdint>
 #include "Eigen.h"
 
+//#define TIMING_ENABLED
+
+#ifdef TIMING_ENABLED
 #define tic() (omp_get_wtime())
 #define toc(a) (printf("%s, %i: dur %f s\n", __FILE__, __LINE__, omp_get_wtime() - a))
+#else
+#define tic() ((double)0)
+#define toc(a) ((void)a)
+#endif
 
 struct PointCloud
 {
