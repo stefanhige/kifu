@@ -20,34 +20,34 @@ set(HEADERS
     src/utils/Eigen.h
     src/utils/FreeImageHelper.h
     src/utils/VirtualSensor.h
-    KinectFusion.h
     src/utils/NearestNeighbor.h
-    src/DataTypes.h
     src/utils/SimpleMesh.h
+    src/DataTypes.h
     src/SurfaceReconstructor.h
     src/SurfaceMeasurer.h
     src/PoseEstimator.h
     src/SurfacePredictor.h
+    KinectFusion.h
 )
 
 set(SOURCES
-    main.cpp
     src/utils/FreeImageHelper.cpp
     src/SurfaceReconstructor.cpp
     src/SurfaceMeasurer.cpp
     src/PoseEstimator.cpp
     src/SurfacePredictor.cpp
+    main.cpp
 )
 
 find_package(OpenMP)
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kifu ${HEADERS} ${SOURCES})
-target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${Flann_INCLUDE_DIR})
+target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${Flann_INCLUDE_DIR})
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(kifu PUBLIC  general freeimage lz4 ${OpenCV_LIBS} OpenMP::OpenMP_CXX)
+    target_link_libraries(kifu PUBLIC  general freeimage lz4 OpenMP::OpenMP_CXX)
 else()
-    target_link_libraries(kifu general freeimage lz4 ${OpenCV_LIBS})
+    target_link_libraries(kifu general freeimage lz4)
 endif()
 
