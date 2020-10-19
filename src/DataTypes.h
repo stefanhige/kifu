@@ -182,7 +182,7 @@ public:
         return std::tuple<int, int, int>(x, y, z);
     }
 
-    unsigned int getSize()
+    unsigned int getSize() const
     {
         return m_size;
     }
@@ -225,6 +225,33 @@ public:
         }
       }
       fclose(fp);
+    }
+
+    bool isValid(const Vector3f& point) const
+    {
+        Vector3f relPoint = point - getOrigin();
+
+        float x = relPoint.x() / getVoxelSize();
+        float y = relPoint.y() / getVoxelSize();
+        float z = relPoint.z() / getVoxelSize();
+
+        // for numeric stability: set negative values within 0.5 index to small positive number
+        x = (-0.5 < x && x < 0) ? std::numeric_limits<float>::epsilon() : x;
+        y = (-0.5 < y && y < 0) ? std::numeric_limits<float>::epsilon() : y;
+        z = (-0.5 < z && z < 0) ? std::numeric_limits<float>::epsilon() : z;
+
+        // valid interpolation only possible with:
+        // x >= 0, y>=0, z>=0 with equality
+        // x < max_x, y < max_y ... no equality!
+        if((x < 0) || (y < 0) || (z < 0))
+        {
+            return false;
+        }
+        if((x >= getSize() - 1) || (y >= getSize() - 1) || (z >= getSize() - 1))
+        {
+            return false;
+        }
+        return true;
     }
 
 

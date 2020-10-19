@@ -76,6 +76,18 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
 
                    pointCloud.points[idx] = surfaceVertex;
                    pointCloud.pointsValid[idx] = true;
+                   Vector3f normal;
+                   if(compute_normal(surfaceVertex, normal))
+                   {
+                       pointCloud.normals[idx] = Vector3f(MINF, MINF, MINF);
+                       pointCloud.normalsValid[idx] = false;
+                   }
+                   else
+                   {
+                       pointCloud.normals[idx] = normal;
+                       pointCloud.normalsValid[idx] = true;
+
+                   }
                    found_sign_change = true;
                    break;
 
@@ -85,6 +97,8 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
                    // back of surface
                    pointCloud.points[idx] = Vector3f(MINF, MINF, MINF);
                    pointCloud.pointsValid[idx] = false;
+                   pointCloud.normals[idx] = Vector3f(MINF, MINF, MINF);
+                   pointCloud.normalsValid[idx] = false;
                    found_sign_change = true;
                    break;
                }
@@ -97,6 +111,8 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
            {
                pointCloud.points[idx] = Vector3f(MINF, MINF, MINF);
                pointCloud.pointsValid[idx] = false;
+               pointCloud.normals[idx] = Vector3f(MINF, MINF, MINF);
+               pointCloud.normalsValid[idx] = false;
            }
        }
    }
@@ -105,7 +121,14 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
    return pointCloud;
 }
 
-float SurfacePredictor::trilinear_interpolate(const Vector3f point) const
+float SurfacePredictor::trilinear_interpolate(const Vector3f& point) const
+{
+   float value;
+   trilinear_interpolate(point, value);
+   return value;
+}
+
+bool SurfacePredictor::trilinear_interpolate(const Vector3f& point, float& value) const
 {
     Vector3f relPoint = point - m_tsdf->getOrigin();
 
@@ -153,15 +176,15 @@ float SurfacePredictor::trilinear_interpolate(const Vector3f point) const
                 if(!m_tsdf->weight(m_tsdf->ravel_index(x_0+i, y_0+j, z_0+k)))
                 {
                     // no distance information available
-                    return std::numeric_limits<float>::max();
+                    value = std::numeric_limits<float>::max();
+                    return true;
                 }
             }
         }
     }
 
-    return p;
-
-
+    value = p;
+    return false;
 }
 
 float SurfacePredictor::compute_min_t(Vector3f origin, Vector3f direction) const
@@ -192,5 +215,40 @@ float SurfacePredictor::compute_max_t(Vector3f origin, Vector3f direction) const
     float min_t_z = ((direction.z() > 0 ? vol_max.z() : vol_min.z()) - origin.z()) / direction.z();
 
     return std::min<float>(std::min<float>(min_t_x, min_t_y), min_t_z);
+}
+
+bool SurfacePredictor::compute_normal(const Vector3f& point, Vector3f& normal) const
+{
+    float dp = m_tsdf->getVoxelSize();
+    for(int dim=0; dim<3; dim++)
+    {
+        Vector3f p1 = point;
+        p1[dim] -= dp;
+        if(!m_tsdf->isValid(p1))
+        {
+            return true;
+        }
+
+        Vector3f p2 = point;
+        p2[dim] += dp;
+        if(!m_tsdf->isValid(p2))
+        {
+            return true;
+        }
+
+        float n1, n2;
+        if(trilinear_interpolate(p2, n2))
+        {
+            return true;
+        }
+        if(trilinear_interpolate(p1, n1))
+        {
+            return true;
+        }
+        normal[dim] = n2 - n1;
+    }
+    normal = normal.normalized();
+
+    return false;
 }
 
