@@ -22,6 +22,29 @@ struct PointCloud
     std::vector<bool> pointsValid;
     std::vector<Vector3f> normals;
     std::vector<bool> normalsValid;
+
+    void prune()
+    {
+        std::vector<bool> pointsAndNormalsValid;
+        std::transform(pointsValid.begin(), pointsValid.end(), normalsValid.begin(),
+                       std::back_inserter(pointsAndNormalsValid), std::logical_and<>());
+
+        std::vector<Vector3f> points_;
+        std::vector<Vector3f> normals_;
+        for (uint i = 0; i < pointsAndNormalsValid.size(); ++i)
+        {
+            if(pointsAndNormalsValid[i])
+            {
+                points_.push_back(points[i]);
+                normals_.push_back(normals[i]);
+            }
+        }
+        points = points_;
+        normals  = normals_;
+        pointsValid = std::vector<bool>(points.size(), true);
+        normalsValid = std::vector<bool>(normals.size(), true);
+        assert((points.size() == normals.size()) && (pointsValid.size() == normalsValid.size()) && (points.size() == pointsValid.size()));
+    }
 };
 
 // truncated signed distance function

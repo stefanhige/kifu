@@ -61,21 +61,6 @@ void PoseEstimator::printPoints()
     }
 }
 
-std::vector<Vector3f> PoseEstimator::pruneVector(std::vector<Vector3f>& input, std::vector<bool>& validity)
-{
-    assert((input.size() == validity.size()));
-
-    std::vector<Vector3f> output;
-    for (uint i = 0; i < input.size(); ++i)
-    {
-        if(validity[i])
-        {
-            output.push_back(input[i]);
-        }
-    }
-    return output;
-}
-
 std::vector<Vector3f> PoseEstimator::transformPoint(const std::vector<Vector3f>& input, const Matrix4f& pose)
 {
     std::vector<Vector3f> output;

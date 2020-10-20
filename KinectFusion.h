@@ -35,18 +35,12 @@ public:
 
         PointCloud Frame0 = m_SurfaceMeasurer->getPointCloud();
 
-        std::vector<bool> pointsAndNormalsValid;
-        pointsAndNormalsValid.reserve( Frame0.pointsValid.size() );
-
-        std::transform(Frame0.pointsValid.begin(), Frame0.pointsValid.end(), Frame0.normalsValid.begin(),
-                       std::back_inserter(pointsAndNormalsValid), std::logical_and<>());
-
+        PointCloud Frame0_pruned = Frame0;
+        Frame0_pruned.prune();
 
         m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
-        m_PoseEstimator->setTarget(PoseEstimator::pruneVector(Frame0.points, pointsAndNormalsValid),
-                                   PoseEstimator::pruneVector(Frame0.normals, pointsAndNormalsValid));
+        m_PoseEstimator->setTarget(Frame0_pruned.points, Frame0.normals);
 
-        // set to 64
         // 512 will be ~500MB ram
         // 1024 -> 4GB
         m_tsdf = std::make_shared<Tsdf>(256, 1);
@@ -64,6 +58,9 @@ public:
 
         PointCloud Frame0_predicted = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
                                         m_InputHandle->getDepthImageWidth());
+
+        PointCloud Frame0_predicted_pruned = Frame0_predicted;
+        Frame0_predicted_pruned.prune();
 
         Matrix4f pose = Matrix4f::Identity();
 
@@ -98,15 +95,12 @@ public:
 
         PointCloud nextFrame = m_SurfaceMeasurer->getPointCloud();
 
-        std::vector<bool> pointsAndNormalsValid;
-        pointsAndNormalsValid.reserve( nextFrame.pointsValid.size() );
+        PointCloud nextFramePruned = nextFrame;
+        nextFramePruned.prune();
 
-        std::transform(nextFrame.pointsValid.begin(), nextFrame.pointsValid.end(), nextFrame.normalsValid.begin(),
-            std::back_inserter(pointsAndNormalsValid), std::logical_and<>());
+        // set targetfrom SurfacePredictor
 
-        m_PoseEstimator->setSource(PoseEstimator::pruneVector(nextFrame.points, pointsAndNormalsValid),
-                                   PoseEstimator::pruneVector(nextFrame.normals, pointsAndNormalsValid), 8);
-
+        m_PoseEstimator->setSource(nextFramePruned.points, nextFramePruned.normals, 8);
 
         // matrix inverse????
         Matrix4f currentCamToWorld = m_PoseEstimator->estimatePose();
