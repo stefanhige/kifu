@@ -114,7 +114,7 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
         std::vector<Vector3f> targetPoints;
 
         // Add all matches to the sourcePoints and targetPoints vectors,
-        // so thath sourcePoints[i] matches targetPoints[i].
+        // so that sourcePoints[i] matches targetPoints[i].
         for (uint j = 0; j < transformedPoints.size(); j++)
         {
             const auto& match = matches[j];

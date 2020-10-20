@@ -31,7 +31,10 @@ public:
 		// Read tracking
 		if (!readTrajectoryFile(datasetDir + "groundtruth.txt", m_trajectory, m_trajectoryTimeStamps)) return false;
 
-		if (m_filenameDepthImages.size() != m_filenameColorImages.size()) return false;
+        if (m_filenameDepthImages.size() != m_filenameColorImages.size())
+        {
+            std::cout << "different amount of depth and color images!!!\n";
+        }
 
 		// Image resolutions
 		m_colorImageWidth = 640;

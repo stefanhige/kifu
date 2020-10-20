@@ -28,9 +28,10 @@ public:
         m_SurfaceMeasurer = std::make_unique<SurfaceMeasurer>(m_InputHandle->getDepthIntrinsics(),
                                                 m_InputHandle->getDepthImageHeight(),
                                                 m_InputHandle->getDepthImageWidth());
+
         m_SurfaceMeasurer->registerInput(m_InputHandle->getDepth());
         //m_SurfaceMeasurer->smoothInput();
-        //m_SurfaceMeasurer->displayDepthMap();
+
         m_SurfaceMeasurer->process();
 
         PointCloud Frame0 = m_SurfaceMeasurer->getPointCloud();
@@ -39,7 +40,7 @@ public:
         Frame0_pruned.prune();
 
         m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
-        m_PoseEstimator->setTarget(Frame0_pruned.points, Frame0.normals);
+        //m_PoseEstimator->setTarget(Frame0_pruned.points, Frame0.normals);
 
         // 512 will be ~500MB ram
         // 1024 -> 4GB
@@ -47,38 +48,43 @@ public:
         m_tsdf->calcVoxelSize(Frame0);
 
         m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
+
         m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
                                             m_InputHandle->getDepthImageHeight(),
                                             m_InputHandle->getDepthImageWidth(),
                                             Matrix4f::Identity());
 
-        m_tsdf->writeToFile("tsdf-test.ply", 0.01, 0);
+        m_tsdf->writeToFile("tsdf_frame0.ply", 0.01, 0);
 
         m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
-        PointCloud Frame0_predicted = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
-                                        m_InputHandle->getDepthImageWidth());
-
-        PointCloud Frame0_predicted_pruned = Frame0_predicted;
-        Frame0_predicted_pruned.prune();
-
-        Matrix4f pose = Matrix4f::Identity();
-
-        SimpleMesh Frame0_predicted_mesh(Frame0_predicted,
-                                         m_InputHandle->getDepthImageHeight(),
-                                         m_InputHandle->getDepthImageWidth(),
-                                         true);
+        m_currentPose = Matrix4f::Identity();
+        m_CamToWorld = Matrix4f::Identity();
 
 
-        SimpleMesh Frame0_mesh(Frame0,
-                               m_InputHandle->getDepthImageHeight(),
-                               m_InputHandle->getDepthImageWidth(),
-                               true);
+//        PointCloud Frame0_predicted = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
+//                                        m_InputHandle->getDepthImageWidth());
 
-        //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
+//        PointCloud Frame0_predicted_pruned = Frame0_predicted;
+//        Frame0_predicted_pruned.prune();
 
-        Frame0_mesh.writeMesh("Frame0_mesh.off");
-        Frame0_predicted_mesh.writeMesh("Frame0_predicted_mesh.off");
+//        Matrix4f pose = Matrix4f::Identity();
+
+//        SimpleMesh Frame0_predicted_mesh(Frame0_predicted,
+//                                         m_InputHandle->getDepthImageHeight(),
+//                                         m_InputHandle->getDepthImageWidth(),
+//                                         true);
+
+
+//        SimpleMesh Frame0_mesh(Frame0,
+//                               m_InputHandle->getDepthImageHeight(),
+//                               m_InputHandle->getDepthImageWidth(),
+//                               true);
+
+//        //SimpleMesh Frame0_mesh(*m_InputHandle, pose);
+
+//        Frame0_mesh.writeMesh("Frame0_mesh.off");
+//        Frame0_predicted_mesh.writeMesh("Frame0_predicted_mesh.off");
 
 
     }
@@ -90,6 +96,7 @@ public:
         {
             return true;
         }
+        // get V_k, N_k
         m_SurfaceMeasurer->registerInput(m_InputHandle->getDepth());
         m_SurfaceMeasurer->process();
 
@@ -98,18 +105,34 @@ public:
         PointCloud nextFramePruned = nextFrame;
         nextFramePruned.prune();
 
-        // set targetfrom SurfacePredictor
+        // get V_k-1 N_k-1 from global model
+        PointCloud prevFrame = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
+
+                                                           m_InputHandle->getDepthImageWidth(),
+                                                           m_currentPose);
+        prevFrame.prune();
+
+        m_PoseEstimator->setTarget(prevFrame.points, prevFrame.normals);
 
         m_PoseEstimator->setSource(nextFramePruned.points, nextFramePruned.normals, 8);
 
-        // matrix inverse????
-        Matrix4f currentCamToWorld = m_PoseEstimator->estimatePose();
-        Matrix4f currentPose = currentCamToWorld.inverse();
+        m_CamToWorld = m_PoseEstimator->estimatePose(m_CamToWorld);
+        m_currentPose = m_CamToWorld.inverse();
 
+        std::cout << m_currentPose << std::endl;
 
-        std::cout << currentPose << std::endl;
+        // integrate the new frame in the tsdf
+        m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
+                                            m_InputHandle->getDepthImageHeight(),
+                                            m_InputHandle->getDepthImageWidth(),
+                                            m_currentPose);
 
         return false;
+    }
+
+    void saveTsdf()
+    {
+        m_tsdf->writeToFile("tsdf_frame3.ply", 0.01, 0);
     }
 
 
@@ -119,6 +142,8 @@ private:
     std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
     std::unique_ptr<SurfacePredictor> m_SurfacePredictor;
 
+    Matrix4f m_CamToWorld;
+    Matrix4f m_currentPose;
     InputType* m_InputHandle;
     std::string param;
     std::shared_ptr<Tsdf> m_tsdf;
