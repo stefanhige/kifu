@@ -16,6 +16,12 @@
 #define toc(a) ((void)a)
 #endif
 
+#define assert_ndbg(expr) {if(!(expr)){ \
+    std::cerr << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << ":" << \
+    " Assertion '" << \
+    #expr \
+    << "' failed." << std::endl; exit(1);}}
+
 struct PointCloud
 {
     std::vector<Vector3f> points;
@@ -43,7 +49,7 @@ struct PointCloud
         normals  = normals_;
         pointsValid = std::vector<bool>(points.size(), true);
         normalsValid = std::vector<bool>(normals.size(), true);
-        assert((points.size() == normals.size()) && (pointsValid.size() == normalsValid.size()) && (points.size() == pointsValid.size()));
+        assert_ndbg((points.size() == normals.size()) && (pointsValid.size() == normalsValid.size()) && (points.size() == pointsValid.size()));
     }
 };
 
@@ -54,7 +60,7 @@ public:
     Tsdf(unsigned int size, float voxelSize)
         : m_voxelSize(voxelSize)
     {
-        assert(!(size % 2));
+        assert_ndbg(!(size % 2));
         m_tsdf = new float[size*size*size];
 
         // initialize with zeros
@@ -112,17 +118,17 @@ public:
 
     float& operator()(int x, int y, int z)
     {
-        assert(x < m_size && x >= 0);
-        assert(y < m_size && y >= 0);
-        assert(z < m_size && z >= 0);
+        assert_ndbg(x < m_size && x >= 0);
+        assert_ndbg(y < m_size && y >= 0);
+        assert_ndbg(z < m_size && z >= 0);
         return m_tsdf[x + y*m_size + z*m_size*m_size];
     }
 
     float operator()(int x, int y, int z) const
     {
-        assert(x < m_size && x >= 0);
-        assert(y < m_size && y >= 0);
-        assert(z < m_size && z >= 0);
+        assert_ndbg(x < m_size && x >= 0);
+        assert_ndbg(y < m_size && y >= 0);
+        assert_ndbg(z < m_size && z >= 0);
         return m_tsdf[x + y*m_size + z*m_size*m_size];
     }
 
@@ -183,9 +189,9 @@ public:
 
     int ravel_index(const int x, const int y, const int z) const
     {
-        assert(x < m_size && x >= 0);
-        assert(y < m_size && y >= 0);
-        assert(z < m_size && z >= 0);
+        assert_ndbg(x < m_size && x >= 0);
+        assert_ndbg(y < m_size && y >= 0);
+        assert_ndbg(z < m_size && z >= 0);
         return x + y*m_size + z*m_size*m_size;
     }
 
@@ -197,7 +203,7 @@ public:
 
      std::tuple<int, int, int> unravel_index(const int idx) const
     {
-        assert(static_cast<uint>(idx) < m_size*m_size*m_size && idx >= 0);
+        assert_ndbg(static_cast<uint>(idx) < m_size*m_size*m_size && idx >= 0);
         const int x = idx % m_size;
         const int z = idx / (m_size*m_size);
         const int y = (idx / m_size) % m_size;

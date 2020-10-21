@@ -66,6 +66,12 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
                }
 
                prev_sdf = sdf;
+
+               // prevents trilinear_interpolate fail for t=t_max
+               if(!m_tsdf->isValid(currPoint))
+               {
+                   break;
+               }
                sdf = trilinear_interpolate(currPoint);
 
                if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
@@ -144,8 +150,8 @@ bool SurfacePredictor::trilinear_interpolate(const Vector3f& point, float& value
     // valid interpolation only possible with:
     // x >= 0, y>=0, z>=0 with equality
     // x < max_x, y < max_y ... no equality!
-    assert(!((x < 0) || (y < 0) || (z < 0)));
-    assert(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
+    assert_ndbg(!((x < 0) || (y < 0) || (z < 0)));
+    assert_ndbg(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
 
     // notation follows
     // S. Parker: "Interactive Ray Tracing for Isosurface Rendering" 1999

@@ -5,10 +5,6 @@
 #define VERBOSE(msg)
 #endif
 
-#ifndef ASSERT
-#define ASSERT(a) {if (!(a)) { std::cerr << "Error:\nFile: " << __FILE__ << "\nLine: " << __LINE__ << "\nFunction: " << __FUNCTION__ << std::endl; while(1); }}
-#endif
-
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(ptr) {if(ptr!=nullptr) {delete ptr; ptr = nullptr;}}
 #endif

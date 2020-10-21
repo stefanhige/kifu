@@ -4,7 +4,6 @@
 
 int main()
 {
-
     // load video
     std::string filenameIn = std::string("../kifu/data/rgbd_dataset_freiburg1_plant/");
     std::cout << "Initialize virtual sensor..." << std::endl;
@@ -17,7 +16,7 @@ int main()
     }
 
     KiFuModel model(sensor);
-    for(int i=0; i<100; i++)
+    for(int i=0; i<300; i++)
     {
         model.processNextFrame();
     }

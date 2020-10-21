@@ -69,7 +69,8 @@ std::vector<Vector3f> PoseEstimator::transformPoint(const std::vector<Vector3f>&
     const auto rotation = pose.block(0, 0, 3, 3);
     const auto translation = pose.block(0, 3, 3, 1);
 
-    for (const auto& point : input) {
+    for (const auto& point : input)
+    {
         output.push_back(rotation * point + translation);
     }
 
@@ -83,7 +84,8 @@ std::vector<Vector3f> PoseEstimator::transformNormal(const std::vector<Vector3f>
 
     const auto rotation = pose.block(0, 0, 3, 3);
 
-    for (const auto& normal : input) {
+    for (const auto& normal : input)
+    {
         output.push_back(rotation.inverse().transpose() * normal);
     }
 
