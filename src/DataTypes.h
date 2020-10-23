@@ -66,6 +66,9 @@ public:
         // initialize with zeros
         m_weight = new uint_least8_t[size*size*size]();
 
+        // initialize with zeros
+        m_color = new uint_least8_t[size*size*size*3]();
+
         m_size = size;
     }
 
@@ -73,6 +76,7 @@ public:
     {
         delete [] m_tsdf;
         delete [] m_weight;
+        delete [] m_color;
     }
 
     // set m_voxelSize according to the points
@@ -155,6 +159,36 @@ public:
     uint_least8_t weight(const int idx) const
     {
         return m_weight[idx];
+    }
+
+    uint_least8_t& colorR(const int idx)
+    {
+        return m_color[idx*3];
+    }
+
+    uint_least8_t colorR(const int idx) const
+    {
+        return m_color[idx*3];
+    }
+
+    uint_least8_t& colorG(const int idx)
+    {
+        return m_color[idx*3+1];
+    }
+
+    uint_least8_t colorG(const int idx) const
+    {
+        return m_color[idx*3+1];
+    }
+
+    uint_least8_t& colorB(const int idx)
+    {
+        return m_color[idx*3+2];
+    }
+
+    uint_least8_t colorB(const int idx) const
+    {
+        return m_color[idx*3+2];
     }
 
     uint_least8_t max_weight() const
@@ -288,6 +322,7 @@ public:
 private:
     float* m_tsdf;
     uint_least8_t* m_weight;
+    uint_least8_t* m_color;
     uint m_size;
     Vector3f m_origin = Vector3f(0, 0, 0);
     float m_voxelSize;

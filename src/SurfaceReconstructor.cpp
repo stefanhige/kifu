@@ -7,7 +7,11 @@ SurfaceReconstructor::SurfaceReconstructor(std::shared_ptr<Tsdf> tsdf, Matrix3f 
 {
 }
 
-void SurfaceReconstructor::reconstruct(const float* rawDepthMap, const unsigned int depthImageHeight, const unsigned int depthImageWidth, const Matrix4f cameraToWorld)
+void SurfaceReconstructor::reconstruct(const float* rawDepthMap,
+                                       const uint8_t* rawColorMap,
+                                       const unsigned int imageHeight,
+                                       const unsigned int imageWidth,
+                                       const Matrix4f cameraToWorld)
 {
 
     // for each point in the tsdf:
@@ -25,10 +29,10 @@ void SurfaceReconstructor::reconstruct(const float* rawDepthMap, const unsigned 
         int x_pixel = floor(cameraPoint_.x()/cameraPoint_.z());
         int y_pixel = floor(cameraPoint_.y()/cameraPoint_.z());
 
-        if (!(x_pixel < 0 || x_pixel >= static_cast<int>(depthImageWidth) || y_pixel < 0 || y_pixel >= static_cast<int>(depthImageHeight)))
+        if (!(x_pixel < 0 || x_pixel >= static_cast<int>(imageWidth) || y_pixel < 0 || y_pixel >= static_cast<int>(imageHeight)))
         {
             // look up depth value of raw depth map
-            float depth = rawDepthMap[x_pixel + depthImageWidth*y_pixel];
+            float depth = rawDepthMap[x_pixel + imageWidth*y_pixel];
             // filter out -inf or nan
             if(std::isgreaterequal(depth, 0))
             {
@@ -47,6 +51,19 @@ void SurfaceReconstructor::reconstruct(const float* rawDepthMap, const unsigned 
                     (*m_tsdf)(idx) = (m_tsdf->weight(idx)*(*m_tsdf)(idx) + sdf) / (m_tsdf->weight(idx) + 1);
 
                     m_tsdf->weight(idx) = (m_tsdf->weight(idx) < m_tsdf->max_weight()) ? m_tsdf->weight(idx) + 1 : m_tsdf->max_weight();
+
+                    // update colors
+                    // TODO: update constraint
+                    if(std::abs(sdf) < m_tsdf->getVoxelSize())
+                    {
+                        // ingore alpha channel: rawColorMap is RGBX, we only use RGB
+                        uint16_t color[3] = {rawColorMap[(x_pixel + imageWidth*y_pixel)*4],
+                                                  rawColorMap[(x_pixel + imageWidth*y_pixel)*4+1],
+                                                  rawColorMap[(x_pixel + imageWidth*y_pixel)*4+2]};
+                        m_tsdf->colorR(idx) = static_cast<uint16_t>((static_cast<uint16_t>(m_tsdf->weight(idx))*m_tsdf->colorR(idx) + color[0]) / (m_tsdf->weight(idx) + 1));
+                        m_tsdf->colorG(idx) = static_cast<uint16_t>((static_cast<uint16_t>(m_tsdf->weight(idx))*m_tsdf->colorG(idx) + color[1]) / (m_tsdf->weight(idx) + 1));
+                        m_tsdf->colorB(idx) = static_cast<uint16_t>((static_cast<uint16_t>(m_tsdf->weight(idx))*m_tsdf->colorB(idx) + color[2]) / (m_tsdf->weight(idx) + 1));
+                    }
                 }
             }
         }

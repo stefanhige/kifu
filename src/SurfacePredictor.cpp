@@ -127,6 +127,102 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
    return pointCloud;
 }
 
+void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose)
+{
+    float fovX = m_cameraIntrinsics(0, 0);
+    float fovY = m_cameraIntrinsics(1, 1);
+    float cX = m_cameraIntrinsics(0, 2);
+    float cY = m_cameraIntrinsics(1, 2);
+
+    Matrix3f rotMatrix = pose.block<3,3>(0,0);
+    Vector3f tranVector = pose.block<3,1>(0,3);
+
+    for(uint y_pixel=0; y_pixel < depthImageHeight; ++y_pixel)
+    {
+        for(uint x_pixel=0; x_pixel < depthImageWidth; ++x_pixel)
+        {
+            uint idx = y_pixel*depthImageWidth + x_pixel;
+
+            float depth = 1;
+            Vector3f rayDirCamera = Vector3f((x_pixel - cX) / fovX * depth, (y_pixel - cY) / fovY * depth, depth);
+            Vector3f rayDirWorld = (rotMatrix*rayDirCamera).normalized();
+
+            // position of the camera
+            Vector3f rayOriginWorld = tranVector;
+
+            float min_t = compute_min_t(rayOriginWorld, rayDirWorld);
+            float max_t = compute_max_t(rayOriginWorld, rayDirWorld);
+
+            float t_step_size = 0.01; // function of truncation distance
+
+            // loop
+            float prev_sdf;
+            float sdf;
+
+            bool is_first_sdf = true;
+            bool found_sign_change = false;
+
+            for(float t=min_t; t<max_t; t+= t_step_size)
+            {
+                Vector3f currPoint = rayOriginWorld + t * rayDirWorld;
+
+                if(is_first_sdf)
+                {
+                    sdf = trilinear_interpolate(currPoint);
+                    is_first_sdf = false;
+                    continue;
+                }
+
+                prev_sdf = sdf;
+
+                // prevents trilinear_interpolate fail for t=t_max
+                if(!m_tsdf->isValid(currPoint))
+                {
+                    break;
+                }
+                sdf = trilinear_interpolate(currPoint);
+
+                if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
+                {
+                    // found a surface
+                    float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
+                    Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
+
+                    // TODO: trilinear interpolate the color at surfaceVertex
+                    uint8_t r, g, b;
+                    r = g = b = 0;
+                    colorMap[idx*3] = r;
+                    colorMap[idx*3+1] = g;
+                    colorMap[idx*3+2] = b;
+                    found_sign_change = true;
+                    break;
+
+                }
+                else if ((prev_sdf < 0 && sdf > 0 ) || (prev_sdf == 0 && sdf > 0) || (prev_sdf < 0 && sdf == 0))
+                {
+                    // back of surface
+                    colorMap[idx*3] = 255;
+                    colorMap[idx*3+1] = 255;
+                    colorMap[idx*3+2] = 255;
+                    found_sign_change = true;
+                    break;
+                }
+                else
+                {
+                    // continue iteration
+                }
+            }
+            if(!found_sign_change)
+            {
+                colorMap[idx*3] = 255;
+                colorMap[idx*3+1] = 255;
+                colorMap[idx*3+2] = 255;
+            }
+        }
+    }
+}
+
+
 float SurfacePredictor::trilinear_interpolate(const Vector3f& point) const
 {
    float value;

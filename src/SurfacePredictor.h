@@ -9,6 +9,7 @@ public:
     SurfacePredictor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIntrinsics);
 
     PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity());
+    void predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity());
 
 private:
    float trilinear_interpolate(const Vector3f& point) const;

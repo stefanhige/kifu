@@ -40,7 +40,6 @@ public:
         Frame0_pruned.prune();
 
         m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
-        //m_PoseEstimator->setTarget(Frame0_pruned.points, Frame0.normals);
 
         // 512 will be ~500MB ram
         // 1024 -> 4GB
@@ -50,20 +49,17 @@ public:
         m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
         m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
+                                            m_InputHandle->getColorRGBX(),
                                             m_InputHandle->getDepthImageHeight(),
-                                            m_InputHandle->getDepthImageWidth(),
+                                            m_InputHandle->getDepthImageWidth(), 
                                             Matrix4f::Identity());
 
-        m_tsdf->writeToFile("tsdf_frame0.ply", 0.01, 0);
+        //m_tsdf->writeToFile("tsdf_frame0.ply", 0.01, 0);
 
         m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
         m_currentPose = Matrix4f::Identity();
         m_CamToWorld = Matrix4f::Identity();
-
-
-//        PointCloud Frame0_predicted = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
-//                                        m_InputHandle->getDepthImageWidth());
 
 //        PointCloud Frame0_predicted_pruned = Frame0_predicted;
 //        Frame0_predicted_pruned.prune();
@@ -107,7 +103,6 @@ public:
 
         // get V_k-1 N_k-1 from global model
         PointCloud prevFrame = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
-
                                                            m_InputHandle->getDepthImageWidth(),
                                                            m_currentPose);
         prevFrame.prune();
@@ -123,6 +118,7 @@ public:
 
         // integrate the new frame in the tsdf
         m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
+                                            m_InputHandle->getColorRGBX(),
                                             m_InputHandle->getDepthImageHeight(),
                                             m_InputHandle->getDepthImageWidth(),
                                             m_currentPose);
@@ -130,11 +126,22 @@ public:
         return false;
     }
 
-    void saveTsdf()
+    void saveTsdf(std::string filename)
     {
-        m_tsdf->writeToFile("tsdf_frame3.ply", 0.01, 0);
+        m_tsdf->writeToFile(filename, 0.01, 0);
     }
 
+    void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity())
+    {
+        FreeImageB image(m_InputHandle->getDepthImageWidth(), m_InputHandle->getDepthImageHeight(), 3);
+
+        m_SurfacePredictor->predictColor(image.data,
+                                         m_InputHandle->getDepthImageHeight(),
+                                         m_InputHandle->getDepthImageWidth(),
+                                         pose);
+
+        image.SaveImageToFile(filename);
+    }
 
 private:
     std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;

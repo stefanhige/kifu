@@ -8,7 +8,7 @@
 #include "Eigen.h"
 #include "FreeImageHelper.h"
 
-typedef unsigned char BYTE;
+typedef uint8_t BYTE;
 
 // reads sensor files according to https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
 class VirtualSensor {
@@ -221,7 +221,7 @@ private:
 
 	// frame data
 	float* m_depthFrame;
-	BYTE* m_colorFrame;
+    BYTE* m_colorFrame;
 	Eigen::Matrix4f m_currentTrajectory;
 
 	// color camera info
