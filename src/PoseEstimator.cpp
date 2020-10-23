@@ -93,11 +93,11 @@ std::vector<Vector3f> PoseEstimator::transformNormal(const std::vector<Vector3f>
 }
 
 NearestNeighborPoseEstimator::NearestNeighborPoseEstimator()
-    : m_nearestNeighborSearch{ std::make_unique<NearestNeighborSearchFlann>()}
 {}
 
 Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
 {
+    m_nearestNeighborSearch = std::make_unique<NearestNeighborSearchFlann>();
     // Build the index of the FLANN tree (for fast nearest neighbor lookup).
     m_nearestNeighborSearch->buildIndex(m_target.points);
 
@@ -129,6 +129,7 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
         estimatedPose = solvePointToPlane(sourcePoints, targetPoints, m_target.normals) * estimatedPose;
     }
 
+    m_nearestNeighborSearch.reset();
     return estimatedPose;
 
 }
@@ -141,7 +142,8 @@ Matrix4f NearestNeighborPoseEstimator::solvePointToPlane(const std::vector<Vecto
     MatrixXf A = MatrixXf::Zero(4 * nPoints, 6);
     VectorXf b = VectorXf::Zero(4 * nPoints);
 
-    for (unsigned i = 0; i < nPoints; i++) {
+    for (unsigned i = 0; i < nPoints; i++)
+    {
         const auto& s = sourcePoints[i];
         const auto& d = targetPoints[i];
         const auto& n = targetNormals[i];
