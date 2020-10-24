@@ -6,6 +6,7 @@
 #include <cstdint>
 #include "Eigen.h"
 
+// MATLAB-style macros to profile the execution time gains by parallelism (OpenMP)
 //#define TIMING_ENABLED
 
 #ifdef TIMING_ENABLED
@@ -16,12 +17,15 @@
 #define toc(a) ((void)a)
 #endif
 
+// release-build assertion
 #define assert_ndbg(expr) {if(!(expr)){ \
     std::cerr << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << ":" << \
     " Assertion '" << \
     #expr \
     << "' failed." << std::endl; exit(1);}}
 
+// PointCloud, with points normals and their validity
+// all std::vectors should always have eqal length, although this is not enforced by the class!
 struct PointCloud
 {
     std::vector<Vector3f> points;
@@ -29,6 +33,7 @@ struct PointCloud
     std::vector<Vector3f> normals;
     std::vector<bool> normalsValid;
 
+    // only keep points[i] and normals[i] where (pointsValid[i] && normalsValid[i])
     void prune()
     {
         std::vector<bool> pointsAndNormalsValid;
@@ -54,6 +59,7 @@ struct PointCloud
 };
 
 // truncated signed distance function
+// see also: https://en.wikipedia.org/wiki/Signed_distance_function
 class Tsdf
 {
 public:
@@ -109,15 +115,10 @@ public:
                 z_min = (pointCloud.points[i].z() < z_min) ? pointCloud.points[i].z() : z_min;
             }
         }
-        //std::cout << "x " << x_min << " " << x_max << std::endl;
-        //std::cout << "y " << y_min << " " << y_max << std::endl;
-        //std::cout << "z " << z_min << " " << z_max << std::endl;
 
         m_origin = Vector3f(x_min, y_min, z_min);
         float max_span = std::max({x_max - x_min, y_max - y_min, z_max - z_min});
-        //std::cout << max_span << std::endl;
         m_voxelSize = max_span / (m_size - 1);
-        //std::cout << m_voxelSize << std::endl;
     }
 
     float& operator()(int x, int y, int z)
@@ -143,7 +144,6 @@ public:
        int y = rel_pos.y() / m_voxelSize;
        int z = rel_pos.z() / m_voxelSize;
        return this->operator()(x, y, z);
-
     }
 
     float& operator()(const int idx)
@@ -220,7 +220,7 @@ public:
         return m_voxelSize;
     }
 
-
+    // convert tuple of indices into linear index
     int ravel_index(const int x, const int y, const int z) const
     {
         assert_ndbg(x < m_size && x >= 0);
@@ -234,8 +234,8 @@ public:
         return ravel_index(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz));
     }
 
-
-     std::tuple<int, int, int> unravel_index(const int idx) const
+    // convert linear index to tuple of indices
+    std::tuple<int, int, int> unravel_index(const int idx) const
     {
         assert_ndbg(static_cast<uint>(idx) < m_size*m_size*m_size && idx >= 0);
         const int x = idx % m_size;
@@ -250,7 +250,7 @@ public:
         return m_size;
     }
 
-
+    // debug method
     void writeToFile(const std::string &file_name, float tsdf_threshold = 0.1, float weight_threshold = 0)
     {
       // number of points in point cloud
@@ -290,6 +290,8 @@ public:
       fclose(fp);
     }
 
+    // check if a point is inside the tsdf excluding the upper bound of all dimensions
+    // so indices of the tsdf, the point refers to are: > 0 and < m_size - 1
     bool isValid(const Vector3f& point) const
     {
         Vector3f relPoint = point - getOrigin();
@@ -310,14 +312,12 @@ public:
         {
             return false;
         }
-        if((x >= getSize() - 1) || (y >= getSize() - 1) || (z >= getSize() - 1))
+        if((x >= m_size - 1) || (y >= m_size - 1) || (z >= m_size - 1))
         {
             return false;
         }
         return true;
     }
-
-
 
 private:
     float* m_tsdf;

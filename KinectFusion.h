@@ -126,11 +126,13 @@ public:
         return false;
     }
 
+    // debug method
     void saveTsdf(std::string filename)
     {
         m_tsdf->writeToFile(filename, 0.01, 0);
     }
 
+    // debug method
     void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity())
     {
         FreeImageB image(m_InputHandle->getDepthImageWidth(), m_InputHandle->getDepthImageHeight(), 3);
