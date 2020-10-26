@@ -64,7 +64,7 @@ set(HEADERS
     src/SurfaceMeasurer.h
     src/PoseEstimator.h
     src/SurfacePredictor.h
-    KinectFusion.h
+    KinectFusion.h  
 )
 
 set(SOURCES
