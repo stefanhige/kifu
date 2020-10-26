@@ -188,12 +188,16 @@ void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeig
                     float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
                     Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
 
-                    // TODO: trilinear interpolate the color at surfaceVertex
-                    uint8_t r, g, b;
-                    r = g = b = 0;
-                    colorMap[idx*3] = r;
-                    colorMap[idx*3+1] = g;
-                    colorMap[idx*3+2] = b;
+                    // trilinear interpolate the color at surfaceVertex
+                    if(trilinear_interpolate_color(surfaceVertex, colorMap+(idx*3)))
+                    {
+                        // invalid interpolation
+                        colorMap[idx*3] = 255;
+                        colorMap[idx*3+1] = 255;
+                        colorMap[idx*3+2] = 255;
+                        found_sign_change = true;
+                        break;
+                    }
                     found_sign_change = true;
                     break;
 
@@ -288,6 +292,71 @@ bool SurfacePredictor::trilinear_interpolate(const Vector3f& point, float& value
     value = p;
     return false;
 }
+
+bool SurfacePredictor::trilinear_interpolate_color(const Vector3f &point, uint8_t *rgb) const
+{
+    Vector3f relPoint = point - m_tsdf->getOrigin();
+
+    float x = relPoint.x() / m_tsdf->getVoxelSize();
+    float y = relPoint.y() / m_tsdf->getVoxelSize();
+    float z = relPoint.z() / m_tsdf->getVoxelSize();
+
+    // for numeric stability: set negative values within 0.5 index to small positive number
+    x = (-0.5 < x && x < 0) ? std::numeric_limits<float>::epsilon() : x;
+    y = (-0.5 < y && y < 0) ? std::numeric_limits<float>::epsilon() : y;
+    z = (-0.5 < z && z < 0) ? std::numeric_limits<float>::epsilon() : z;
+
+    // valid interpolation only possible with:
+    // x >= 0, y>=0, z>=0 with equality
+    // x < max_x, y < max_y ... no equality!
+    assert_ndbg(!((x < 0) || (y < 0) || (z < 0)));
+    assert_ndbg(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
+
+    // notation follows
+    // S. Parker: "Interactive Ray Tracing for Isosurface Rendering" 1999
+
+    int x_0 = std::floor(x);
+    int y_0 = std::floor(y);
+    int z_0 = std::floor(z);
+
+    float u_ = x - x_0;
+    float v_ = y - y_0;
+    float w_ = z - z_0;
+
+    float u[] = {1 - u_, u_};
+    float v[] = {1 - v_, v_};
+    float w[] = {1 - w_, w_};
+
+    float r, g, b;
+    r = g = b = 0;
+
+    for(int i=0; i<2; ++i)
+    {
+        for(int j=0; j<2; ++j)
+        {
+            for(int k=0; k<2; ++k)
+            {
+                r += u[i] * v[j] * w[k] * m_tsdf->colorR(m_tsdf->ravel_index(x_0+i, y_0+j, z_0+k));
+                g += u[i] * v[j] * w[k] * m_tsdf->colorG(m_tsdf->ravel_index(x_0+i, y_0+j, z_0+k));
+                b += u[i] * v[j] * w[k] * m_tsdf->colorB(m_tsdf->ravel_index(x_0+i, y_0+j, z_0+k));
+
+                // at least one of the used points has weight zero
+                if(!m_tsdf->weight(m_tsdf->ravel_index(x_0+i, y_0+j, z_0+k)))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    *rgb     = (r <= 255) ? static_cast<uint8_t>(r) : 255;
+    *(rgb+1) = (g <= 255) ? static_cast<uint8_t>(g) : 255;
+    *(rgb+2) = (b <= 255) ? static_cast<uint8_t>(b) : 255;
+
+    return false;
+}
+
+
 
 float SurfacePredictor::compute_min_t(Vector3f origin, Vector3f direction) const
 {

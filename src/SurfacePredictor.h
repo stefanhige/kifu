@@ -19,6 +19,7 @@ private:
    // interpolate m_tsdf to continous locations
    float trilinear_interpolate(const Vector3f& point) const;
    bool trilinear_interpolate(const Vector3f& point, float& value) const;
+   bool trilinear_interpolate_color(const Vector3f& point, uint8_t* rgb) const;
    // estimate parameter 't' for raycasting
    float compute_min_t(Vector3f origin, Vector3f direction) const;
    float compute_max_t(Vector3f origin, Vector3f direction) const;
