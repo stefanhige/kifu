@@ -41,6 +41,7 @@ public:
 
 private:
     Matrix4f solvePointToPlane(const std::vector<Vector3f>& sourcePoints, const std::vector<Vector3f>& targetPoints, const std::vector<Vector3f>& targetNormals);
+    void pruneCorrespondences(const std::vector<Vector3f> &sourceNormals, const std::vector<Vector3f> &targetNormals, std::vector<Match> &matches);
 
     std::unique_ptr<NearestNeighborSearch> m_nearestNeighborSearch;
 };

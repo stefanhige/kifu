@@ -109,8 +109,7 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
         auto transformedNormals = transformNormal(m_source.normals, estimatedPose);
         auto matches = m_nearestNeighborSearch->queryMatches(transformedPoints);
 
-        // TODO
-        // pruneCorrespondences(transformedNormals, m_target.getNormals(), matches);
+        pruneCorrespondences(transformedNormals, m_target.normals, matches);
 
         std::vector<Vector3f> sourcePoints;
         std::vector<Vector3f> targetPoints;
@@ -120,12 +119,15 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
         for (uint j = 0; j < transformedPoints.size(); j++)
         {
             const auto& match = matches[j];
-            if (match.idx >= 0) {
+            if (match.idx >= 0)
+            {
                 sourcePoints.push_back(transformedPoints[j]);
                 targetPoints.push_back(m_target.points[match.idx]);
             }
         }
 
+        // need at least 3 points
+        assert_ndbg(sourcePoints.size() >= 3);
         estimatedPose = solvePointToPlane(sourcePoints, targetPoints, m_target.normals) * estimatedPose;
     }
 
@@ -174,6 +176,12 @@ Matrix4f NearestNeighborPoseEstimator::solvePointToPlane(const std::vector<Vecto
 
     x = svd.solve(b);
 
+    // TODO: constraint watching d/(d n_iter) MSE and adjusting n_iter if necessary
+    // residuals
+    ArrayXf res = (b - A * x).array();
+    // std::cout << "avg MSE per eqn: " << (res.abs().square().sum()) / (4*nPoints) << std::endl;
+
+
     float alpha = x(0), beta = x(1), gamma = x(2);
 
     // Build the pose matrix
@@ -189,5 +197,26 @@ Matrix4f NearestNeighborPoseEstimator::solvePointToPlane(const std::vector<Vecto
     estimatedPose.block<3,1>(0,3) = translation;
 
     return estimatedPose;
+}
+
+void NearestNeighborPoseEstimator::pruneCorrespondences(const std::vector<Vector3f>& sourceNormals, const std::vector<Vector3f>& targetNormals, std::vector<Match>& matches)
+{
+    const uint nPoints = sourceNormals.size();
+
+    for (uint i = 0; i < nPoints; ++i)
+    {
+        Match& match = matches[i];
+        if (match.idx >= 0)
+        {
+            const auto& sourceNormal = sourceNormals[i];
+            const auto& targetNormal = targetNormals[match.idx];
+            float angle = std::acos(sourceNormal.dot(targetNormal));
+            // larger than 60 deg
+            if(angle > 1.0472f)
+            {
+                match.idx = -1;
+            }
+        }
+    }
 }
 
