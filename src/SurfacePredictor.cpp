@@ -185,8 +185,8 @@ void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeig
                 if ((prev_sdf > 0 && sdf < 0)  || (prev_sdf == 0 && sdf < 0) || (prev_sdf > 0 && sdf == 0))
                 {
                     // found a surface
-                    float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
-                    Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
+                    //float t_star = t - t_step_size - (t_step_size * prev_sdf) / (sdf - prev_sdf);
+                    //Vector3f surfaceVertex = rayOriginWorld + t_star * rayDirWorld;
 
                     // trilinear interpolate the color at surfaceVertex
                     if(trilinear_interpolate_color(surfaceVertex, colorMap+(idx*3)))
