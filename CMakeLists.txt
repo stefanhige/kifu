@@ -7,46 +7,62 @@ project(kifu)
 set(CMAKE_CXX_STANDARD 17)  #necessary due to std::filesystem
 add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
 
-set(LIB_DIR ../libs)
-set(EIGEN_DOWNLOAD_DIR eigensrc-download)
-set(EIGEN_BUILD_DIR eigensrc-build)
-set(EIGEN_DIR eigen)
-############
-#Technique similiar to a google test setup with automatic download and install
-#Thanks to: https://chromium.googlesource.com/external/github.com/google/googletest/+/HEAD/googletest/README.md
-# Download and unpack eigen at configure time
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}/CMakeLists.txt ) # We assume it's downloaded if CMakeLists.txt is present!
-MESSAGE("Downloading Files from Eigen Git Repo...")
 
-   configure_file(CMakeLists.txt.in ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/eigensrc-download/CMakeLists.txt)
-   execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} .
-   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
-   )
-
-#setting error_quiet here is arguably a buggy solution. It is not possible with this method otherwise however, as some git files are copied right in the end, that don't exist in the directory anymore. This is not the case for the google test setup however
-execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
-    ERROR_QUIET
-     )
+if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+    set(USE_FANCY_EIGEN_SETUP FALSE)
+    message("Using Eigen from libs")
+else()
+    set(USE_FANCY_EIGEN_SETUP TRUE)
+    message("Eigen auto setup...")
 endif()
 
-#Run CMake on downloaded files and place make files into build dir
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DIR}/include )# We assume it's downloaded if CMakeLists.txt is present!
-MESSAGE("Making and Installing Eigen to Libs...")
-execute_process(COMMAND ${CMAKE_COMMAND}  ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
-      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DIR}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_BUILD_DIR}
-  )
+if(USE_FANCY_EIGEN_SETUP)
 
-#Call make install on build directory of eig
-execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_BUILD_DIR} --target install
+    set(LIB_DIR ../libs)
+    set(EIGEN_DOWNLOAD_DIR eigensrc-download)
+    set(EIGEN_BUILD_DIR eigensrc-build)
+    set(EIGEN_DIR eigen)
+    ############
+    #Technique similiar to a google test setup with automatic download and install
+    #Thanks to: https://chromium.googlesource.com/external/github.com/google/googletest/+/HEAD/googletest/README.md
+    # Download and unpack eigen at configure time
+    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}/CMakeLists.txt ) # We assume it's downloaded if CMakeLists.txt is present!
+    MESSAGE("Downloading Files from Eigen Git Repo...")
+
+       configure_file(CMakeLists.txt.in ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/eigensrc-download/CMakeLists.txt)
+       execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} .
+       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
        )
-endif()
-#add_subdirectory(${LIB_DIR}
-############
 
-set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR} libs CACHE PATH "Path to lib folder")
-#set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/Eigen/ CACHE PATH "Path to Eigen source folder")
-set(Eigen3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/eigen/include/eigen3)
+    #setting error_quiet here is arguably a buggy solution. It is not possible with this method otherwise however, as some git files are copied right in the end, that don't exist in the directory anymore. This is not the case for the google test setup however
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
+        ERROR_QUIET
+         )
+    endif()
+
+    #Run CMake on downloaded files and place make files into build dir
+    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DIR}/include )# We assume it's downloaded if CMakeLists.txt is present!
+    MESSAGE("Making and Installing Eigen to Libs...")
+    execute_process(COMMAND ${CMAKE_COMMAND}  ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
+          -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_BUILD_DIR}
+      )
+
+    #Call make install on build directory of eig
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_BUILD_DIR} --target install
+           )
+    endif()
+    #add_subdirectory(${LIB_DIR}
+    ############
+
+    #set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR} libs CACHE PATH "Path to lib folder")
+    #set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/Eigen/ CACHE PATH "Path to Eigen source folder")
+    set(Eigen3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/eigen/include/eigen3)
+
+else()
+    set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR} libs CACHE PATH "Path to lib folder")
+    set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/Eigen/ CACHE PATH "Path to Eigen source folder")
+endif()
 
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
