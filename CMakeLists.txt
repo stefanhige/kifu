@@ -55,14 +55,12 @@ if(USE_FANCY_EIGEN_SETUP)
     #add_subdirectory(${LIB_DIR}
     ############
 
-    #set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR} libs CACHE PATH "Path to lib folder")
-    #set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/Eigen/ CACHE PATH "Path to Eigen source folder")
     set(Eigen3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/eigen/include/eigen3)
-
 else()
-    set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR} libs CACHE PATH "Path to lib folder")
+    set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs CACHE PATH "Path to lib folder")
     set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/Eigen/ CACHE PATH "Path to Eigen source folder")
 endif()
+#message(${Eigen3_INCLUDE_DIR})
 
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
