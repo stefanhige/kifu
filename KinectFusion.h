@@ -23,13 +23,14 @@ public:
     KiFuModel(VirtualSensor & InputHandle);
 
     bool processNextFrame();
+
     // debug method
+    void saveTsdf(std::string filename) const;
 
-    void saveTsdf(std::string filename);
     // debug method
+    void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity()) const;
 
-    void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity());
-
+private:
     std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
     std::unique_ptr<PoseEstimator> m_PoseEstimator;
     std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;

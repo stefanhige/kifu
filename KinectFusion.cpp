@@ -104,12 +104,12 @@ bool KiFuModel::processNextFrame()
     return false;
 }
 
-void KiFuModel::saveTsdf(std::string filename)
+void KiFuModel::saveTsdf(std::string filename) const
 {
     m_tsdf->writeToFile(filename, 0.01, 0);
 }
 
-void KiFuModel::saveScreenshot(std::string filename, const Matrix4f pose)
+void KiFuModel::saveScreenshot(std::string filename, const Matrix4f pose) const
 {
     FreeImageB image(m_InputHandle->getDepthImageWidth(), m_InputHandle->getDepthImageHeight(), 3);
 

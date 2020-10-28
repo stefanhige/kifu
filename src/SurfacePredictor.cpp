@@ -6,7 +6,7 @@ SurfacePredictor::SurfacePredictor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIn
 {
 }
 
-PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose)
+PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose) const
 {
    float fovX = m_cameraIntrinsics(0, 0);
    float fovY = m_cameraIntrinsics(1, 1);
@@ -127,7 +127,7 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
    return pointCloud;
 }
 
-void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose)
+void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose) const
 {
     float fovX = m_cameraIntrinsics(0, 0);
     float fovY = m_cameraIntrinsics(1, 1);
@@ -370,7 +370,7 @@ float SurfacePredictor::compute_min_t(Vector3f origin, Vector3f direction) const
     float min_t_y = ((direction.y() > 0 ? vol_min.y() : vol_max.y()) - origin.y()) / direction.y();
     float min_t_z = ((direction.z() > 0 ? vol_min.z() : vol_max.z()) - origin.z()) / direction.z();
 
-    return std::max<float>(std::max<float>(min_t_x, min_t_y), min_t_z);
+    return std::max<float>(0, std::max<float>(std::max<float>(min_t_x, min_t_y), min_t_z));
 }
 
 float SurfacePredictor::compute_max_t(Vector3f origin, Vector3f direction) const
@@ -385,7 +385,7 @@ float SurfacePredictor::compute_max_t(Vector3f origin, Vector3f direction) const
     float min_t_y = ((direction.y() > 0 ? vol_max.y() : vol_min.y()) - origin.y()) / direction.y();
     float min_t_z = ((direction.z() > 0 ? vol_max.z() : vol_min.z()) - origin.z()) / direction.z();
 
-    return std::min<float>(std::min<float>(min_t_x, min_t_y), min_t_z);
+    return std::max<float>(0, std::min<float>(std::min<float>(min_t_x, min_t_y), min_t_z));
 }
 
 bool SurfacePredictor::compute_normal(const Vector3f& point, Vector3f& normal) const

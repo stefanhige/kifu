@@ -251,7 +251,7 @@ public:
     }
 
     // debug method
-    void writeToFile(const std::string &file_name, float tsdf_threshold = 0.1, float weight_threshold = 0)
+    void writeToFile(const std::string &file_name, float tsdf_threshold = 0.1, float weight_threshold = 0) const
     {
       // number of points in point cloud
       int num_pts = 0;

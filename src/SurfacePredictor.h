@@ -10,10 +10,10 @@ public:
     SurfacePredictor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIntrinsics);
 
     // predict a PointCloud to a certain pose (depth information only)
-    PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity());
+    PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const;
     // predict a color image from a certain pose
     // color image gets stored in the memory pointed to by colorMap
-    void predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity());
+    void predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const;
 
 private:
    // interpolate m_tsdf to continous locations
