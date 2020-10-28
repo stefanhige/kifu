@@ -247,6 +247,11 @@ bool SurfacePredictor::trilinear_interpolate(const Vector3f& point, float& value
     y = (-0.5 < y && y < 0) ? std::numeric_limits<float>::epsilon() : y;
     z = (-0.5 < z && z < 0) ? std::numeric_limits<float>::epsilon() : z;
 
+    // to deal with boundary values, where x == m_tsdf->getSize()-1
+    x = (x >= m_tsdf->getSize() - 1) ? x - x*std::numeric_limits<float>::epsilon() : x;
+    y = (y >= m_tsdf->getSize() - 1) ? y - y*std::numeric_limits<float>::epsilon() : y;
+    z = (y >= m_tsdf->getSize() - 1) ? z - z*std::numeric_limits<float>::epsilon() : z;
+
     // valid interpolation only possible with:
     // x >= 0, y>=0, z>=0 with equality
     // x < max_x, y < max_y ... no equality!
@@ -305,6 +310,11 @@ bool SurfacePredictor::trilinear_interpolate_color(const Vector3f &point, uint8_
     x = (-0.5 < x && x < 0) ? std::numeric_limits<float>::epsilon() : x;
     y = (-0.5 < y && y < 0) ? std::numeric_limits<float>::epsilon() : y;
     z = (-0.5 < z && z < 0) ? std::numeric_limits<float>::epsilon() : z;
+
+    // to deal with boundary values, where x == m_tsdf->getSize()-1
+    x = (x >= m_tsdf->getSize() - 1) ? x - x*std::numeric_limits<float>::epsilon() : x;
+    y = (y >= m_tsdf->getSize() - 1) ? y - y*std::numeric_limits<float>::epsilon() : y;
+    z = (y >= m_tsdf->getSize() - 1) ? z - z*std::numeric_limits<float>::epsilon() : z;
 
     // valid interpolation only possible with:
     // x >= 0, y>=0, z>=0 with equality
