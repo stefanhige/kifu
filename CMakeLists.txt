@@ -69,6 +69,9 @@ endif()
 
 set(FLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/include/flann)
 
+################################# UNIT TESTS ########################################
+add_subdirectory(test)
+
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/src/utils)
