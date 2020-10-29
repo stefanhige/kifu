@@ -31,7 +31,7 @@ jobs:
       - name: cmake
         run: |
           mkdir build && cd build
-          cmake
+          cmake ..
           make
       - name: run tests
         run: ./build/test/unitTests
