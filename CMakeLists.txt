@@ -67,7 +67,7 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}/Makefil
     execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR} --target install)
 endif()
 
-set(FLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/include/flann)
+set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/lib/libflann.so)
 
 ################################# UNIT TESTS ########################################
 add_subdirectory(test)
@@ -107,10 +107,10 @@ link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kifu ${HEADERS} ${SOURCES})
 
 
-target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${FLANN_INCLUDE_DIR})
+target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR})
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(kifu PUBLIC  general freeimage lz4 OpenMP::OpenMP_CXX)
+    target_link_libraries(kifu PUBLIC  general freeimage lz4 OpenMP::OpenMP_CXX ${FLANN_LIB_DIR})
 else()
     target_link_libraries(kifu general freeimage lz4)
 endif()
