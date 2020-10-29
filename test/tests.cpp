@@ -1,9 +1,7 @@
-#include <iostream>
+#include <gtest/gtest.h>
 
-int main()
-{
-    std::cout << "running tests...\n";
-    std::cout << "there are no tests!\n";
-    std::cout << "All 0 tests passed!\n";
-    return 0;
+GTEST_API_ int main(int argc, char **argv) {
+    //printf("Running main() from %s\n", FILE);
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
