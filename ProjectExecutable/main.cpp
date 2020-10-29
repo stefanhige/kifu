@@ -13,7 +13,7 @@ int main()
 #ifdef HAS_STD_FS
     // load video
 
-    std::string filenameIn = std::string("kifu/data/rgbd_dataset_freiburg1_xyz/");
+    std::string filenameIn = std::string("../kifu/data/rgbd_dataset_freiburg1_xyz/");
 
     //Verify that folder exists
     std::filesystem::path executableFolderPath =  std::filesystem::canonical("/proc/self/exe").parent_path();    //Folder of executable from system call
