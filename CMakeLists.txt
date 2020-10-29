@@ -66,8 +66,8 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}/Makefil
     #make install
     execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR} --target install)
 endif()
-
-set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/lib/libflann.so)
+set(FLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/include)
+set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/lib)
 
 ################################# UNIT TESTS ########################################
 add_subdirectory(test)
@@ -101,16 +101,16 @@ set(SOURCES
     KinectFusion.cpp
 )
 
+
 find_package(OpenMP)
 
 link_directories(${FreeImage_LIBRARY_DIR})
+
 add_executable(kifu ${HEADERS} ${SOURCES})
 
-
-target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR})
+target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FLANN_INCLUDE_DIR})
+target_link_libraries(kifu PUBLIC general freeimage lz4 -L${FLANN_LIB_DIR})
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(kifu PUBLIC  general freeimage lz4 OpenMP::OpenMP_CXX ${FLANN_LIB_DIR})
-else()
-    target_link_libraries(kifu general freeimage lz4)
+    target_link_libraries(kifu PUBLIC OpenMP::OpenMP_CXX)
 endif()
