@@ -6,7 +6,6 @@ ExternalProject_Add(eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG 3.3.7
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}"
-    BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_BUILD_DIR}"
     #CONFIGURE_COMMAND ""
     #BUILD_COMMAND ""
     #INSTALL_COMMAND ""
