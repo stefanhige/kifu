@@ -108,7 +108,9 @@ link_directories(${FreeImage_LIBRARY_DIR})
 
 add_executable(kifu ${HEADERS} ${SOURCES})
 
-target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR} ${FLANN_INCLUDE_DIR})
+target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR})
+target_include_directories(kifu SYSTEM PUBLIC ${FLANN_INCLUDE_DIR})
+
 target_link_libraries(kifu PUBLIC general freeimage lz4 -L${FLANN_LIB_DIR})
 
 if(OpenMP_CXX_FOUND)
