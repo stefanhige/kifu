@@ -12,6 +12,9 @@ set(EIGEN_DOWNLOAD_DIR Eigen)
 set(FLANN_DOWNLOAD_DIR flann_src)
 set(FLANN_BUILD_DIR flann_build)
 set(FLANN_INSTALL_DIR flann)
+set(GTEST_DOWNLOAD_DIR gtest-download)
+set(GTEST_BUILD_DIR gtest-build)
+set(GTEST_INSTALL_DIR gtest)
 
 ########################################### EIGEN #######################################
 
@@ -61,7 +64,7 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}/Makefil
               -D BUILD_TESTS=0
               -D BUILD_MATLAB_BINDINGS=0
               -D BUILD_PYTHON_BINDINGS=0
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}
           )
     #make install
     execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR} --target install)
@@ -70,6 +73,43 @@ set(FLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR
 set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/lib)
 
 ################################# UNIT TESTS ########################################
+#Set up Google test installation
+#Thanks to: https://chromium.googlesource.com/external/github.com/google/googletest/+/HEAD/googletest/README.md
+
+# Download and unpack googletest at configure time
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
+    configure_file(CMakeLists.txt.gtest ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}
+        RESULT_VARIABLE result
+    )
+    if(result)
+        message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    endif()
+
+
+    # somehow this fails even tho git repo is still downloaded
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}
+        OUTPUT_VARIABLE output ERROR_QUIET
+        )
+endif()
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_BUILD_DIR}/Makefile)
+    message("call cmake for googletest")
+    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}
+              -D CMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_INSTALL_DIR}
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_BUILD_DIR}
+          )
+    #make install
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_BUILD_DIR} --target install)
+endif()
+set(GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_INSTALL_DIR}/include)
+set(GTEST_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_INSTALL_DIR}/lib)
+
+# Prevent GoogleTest from overriding our compiler/linker options
+# when building with Visual Studio
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+
 add_subdirectory(test)
 
 
