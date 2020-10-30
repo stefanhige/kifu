@@ -88,41 +88,26 @@ set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/li
 
 # Download and unpack googletest at configure time
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
-
-configure_file(CMakeLists.txt.gtest ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}"
-RESULT_VARIABLE result
-)
-if(result)
-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+    configure_file(CMakeLists.txt.gtest ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}"
-)
-
+        RESULT_VARIABLE result)
+    if(result)
+        message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    endif()
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}")
 endif()
-
-set(GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_INSTALL_DIR}/include)
-set(GTEST_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_INSTALL_DIR}/lib)
 
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/googletest-src"
-                 "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/googletest-build"
-)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/googletest-src")
 
 add_subdirectory(${TEST_DIR})
 
-
-
 add_subdirectory(${PROJECT_LIB_DIR})
+
 target_include_directories(${PROJECT_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_LIB_DIR})
 
 add_subdirectory(${PROJECT_EXE_DIR})
-
-
-

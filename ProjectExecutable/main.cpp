@@ -25,7 +25,7 @@ int main()
         return -1;
     }
 #else
-    std::string dataFolderLocation = std::string("../kifu/data/rgbd_dataset_freiburg1_xyz/");
+    std::string dataFolderLocation = std::string("../../kifu/data/rgbd_dataset_freiburg1_xyz/");
 #endif
 
     std::cout << "Initialize virtual sensor..." << std::endl;
