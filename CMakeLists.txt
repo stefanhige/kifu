@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.6)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
+set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 
-project(kifu)
 
-set(CMAKE_CXX_STANDARD 17)  #necessary due to std::filesystem
-add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
+
+set(PROJECT_NAME kifu)
+set(PROJECT_LIB kifuLib)
 
 set(LIB_DIR libs)
 set(TEST_DIR test)
+set(PROJECT_LIB_DIR ProjectLibrary)
+set(PROJECT_EXE_DIR ProjectExecutable)
 set(EIGEN_DOWNLOAD_DIR Eigen)
 set(FLANN_DOWNLOAD_DIR flann_src)
 set(FLANN_BUILD_DIR flann_build)
@@ -17,6 +20,11 @@ set(GTEST_DOWNLOAD_DIR googletest-download)
 set(GTEST_SOURCE_DIR googletest-src)
 set(GTEST_BUILD_DIR googletest-build)
 set(GTEST_INSTALL_DIR gtest)
+
+project(${PROJECT_NAME})
+
+set(CMAKE_CXX_STANDARD 17)  #necessary due to std::filesystem
+add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
 
 ########################################### EIGEN #######################################
 
@@ -111,46 +119,10 @@ add_subdirectory(${TEST_DIR})
 
 
 
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/src/utils)
+add_subdirectory(${PROJECT_LIB_DIR})
+target_include_directories(${PROJECT_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_LIB_DIR})
 
-set(HEADERS
-    src/utils/Eigen.h
-    src/utils/FreeImageHelper.h
-    src/utils/VirtualSensor.h
-    src/utils/NearestNeighbor.h
-    src/utils/SimpleMesh.h
-    src/utils/StopWatch.h
-    src/DataTypes.h
-    src/SurfaceReconstructor.h
-    src/SurfaceMeasurer.h
-    src/PoseEstimator.h
-    src/SurfacePredictor.h
-    KinectFusion.h  
-)
-
-set(SOURCES
-    src/utils/FreeImageHelper.cpp
-    src/SurfaceReconstructor.cpp
-    src/SurfaceMeasurer.cpp
-    src/PoseEstimator.cpp
-    src/SurfacePredictor.cpp
-    main.cpp
-    KinectFusion.cpp
-)
+add_subdirectory(${PROJECT_EXE_DIR})
 
 
-find_package(OpenMP)
 
-link_directories(${FreeImage_LIBRARY_DIR})
-
-add_executable(kifu ${HEADERS} ${SOURCES})
-
-target_include_directories(kifu PUBLIC ${Eigen3_INCLUDE_DIR})
-target_include_directories(kifu SYSTEM PUBLIC ${FLANN_INCLUDE_DIR})
-
-target_link_libraries(kifu PUBLIC general freeimage lz4 -L${FLANN_LIB_DIR})
-
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(kifu PUBLIC OpenMP::OpenMP_CXX)
-endif()
