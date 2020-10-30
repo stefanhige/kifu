@@ -12,7 +12,10 @@ set(LIB_DIR libs)
 set(TEST_DIR test)
 set(PROJECT_LIB_DIR ProjectLibrary)
 set(PROJECT_EXE_DIR ProjectExecutable)
-set(EIGEN_DOWNLOAD_DIR Eigen)
+
+set(EIGEN_RECIPE_DIR eigen_recipe)
+set(EIGEN_SOURCE_DIR eigen)
+
 set(FLANN_DOWNLOAD_DIR flann_src)
 set(FLANN_BUILD_DIR flann_build)
 set(FLANN_INSTALL_DIR flann)
@@ -31,19 +34,15 @@ add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
 #Technique similiar to a google test setup with automatic download and install
 #Thanks to: https://chromium.googlesource.com/external/github.com/google/googletest/+/HEAD/googletest/README.md
 # Download and unpack eigen at configure time
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}/CMakeLists.txt ) # We assume it's downloaded if CMakeLists.txt is present!
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR}/CMakeLists.txt ) # We assume it's downloaded if CMakeLists.txt is present!
     MESSAGE("Downloading Files from Eigen Git Repo...")
-    configure_file(CMakeLists.txt.Eigen ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}/CMakeLists.txt)
-    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} .
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
-    )
-   #setting error_quiet here is arguably a buggy solution. It is not possible with this method otherwise however, as some git files are copied right in the end, that don't exist in the directory anymore. This is not the case for the google test setup however
-   execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR}
-        ERROR_QUIET
-        )
+    configure_file(CMakeLists.txt.Eigen ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR}/CMakeLists.txt)
+
+    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR})
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR})
 endif()
 
-set(Eigen3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_DOWNLOAD_DIR})
+set(Eigen3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_SOURCE_DIR})
 
 ########################################### FLANN #######################################
 
