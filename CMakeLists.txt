@@ -13,11 +13,12 @@ set(TEST_DIR test)
 set(PROJECT_LIB_DIR ProjectLibrary)
 set(PROJECT_EXE_DIR ProjectExecutable)
 
-set(EIGEN_RECIPE_DIR eigen_recipe)
+set(EIGEN_RECIPE_DIR eigen-recipe)
 set(EIGEN_SOURCE_DIR eigen)
 
-set(FLANN_DOWNLOAD_DIR flann_src)
-set(FLANN_BUILD_DIR flann_build)
+set(FLANN_RECIPE_DIR flann-recipe)
+set(FLANN_SOURCE_DIR flann-source)
+set(FLANN_BUILD_DIR flann-build)
 set(FLANN_INSTALL_DIR flann)
 set(GTEST_DOWNLOAD_DIR googletest-download)
 set(GTEST_SOURCE_DIR googletest-src)
@@ -34,39 +35,42 @@ add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
 #Technique similiar to a google test setup with automatic download and install
 #Thanks to: https://chromium.googlesource.com/external/github.com/google/googletest/+/HEAD/googletest/README.md
 # Download and unpack eigen at configure time
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR}/CMakeLists.txt ) # We assume it's downloaded if CMakeLists.txt is present!
-    MESSAGE("Downloading Files from Eigen Git Repo...")
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_SOURCE_DIR}/CMakeLists.txt ) # We assume it's downloaded if CMakeLists.txt is present!
+    MESSAGE("Downloading files from Eigen git repo...")
     configure_file(CMakeLists.txt.Eigen ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR}/CMakeLists.txt)
 
     execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR})
     execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_RECIPE_DIR})
+else()
+    message("Eigen is already downloaded.")
 endif()
 
 set(Eigen3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${EIGEN_SOURCE_DIR})
 
 ########################################### FLANN #######################################
 
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_DOWNLOAD_DIR}/CMakeLists.txt)
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_SOURCE_DIR}/CMakeLists.txt)
     MESSAGE("Downloading files from flann git repo...")
     # this moves the file
-    configure_file(CMakeLists.txt.flann ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_DOWNLOAD_DIR}/CMakeLists.txt)
+    configure_file(CMakeLists.txt.flann ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_RECIPE_DIR}/CMakeLists.txt)
 
-    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_DOWNLOAD_DIR}
-        )
+    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_GENERATOR} . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_RECIPE_DIR})
     # this downloads the git repo
-    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_DOWNLOAD_DIR}
-        )
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_RECIPE_DIR})
+else()
+    message("Flann is already downloaded.")
 endif()
+
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}/Makefile)
-    message("patch flann")
+    message("patch flann.")
     execute_process(COMMAND patch -p2 -i ../../flann.patch
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_DOWNLOAD_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_SOURCE_DIR}
         OUTPUT_VARIABLE output
         )
     message(${output})
 
     message("call cmake for flann")
-    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_DOWNLOAD_DIR}
+    execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_SOURCE_DIR}
               -D CMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}
               -D BUILD_DOC=0
               -D BUILD_EXAMPLES=0
@@ -77,6 +81,8 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}/Makefil
           )
     #make install
     execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR} --target install)
+else()
+    message("Flann is already built.")
 endif()
 set(FLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/include)
 set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/lib)
