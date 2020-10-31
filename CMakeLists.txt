@@ -20,10 +20,9 @@ set(FLANN_RECIPE_DIR flann-recipe)
 set(FLANN_SOURCE_DIR flann-source)
 set(FLANN_BUILD_DIR flann-build)
 set(FLANN_INSTALL_DIR flann)
-set(GTEST_DOWNLOAD_DIR googletest-download)
-set(GTEST_SOURCE_DIR googletest-src)
-set(GTEST_BUILD_DIR googletest-build)
-set(GTEST_INSTALL_DIR gtest)
+
+set(GTEST_RECIPE_DIR googletest-recipe)
+set(GTEST_SOURCE_DIR googletest-source)
 
 project(${PROJECT_NAME})
 
@@ -92,22 +91,24 @@ set(FLANN_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_INSTALL_DIR}/li
 #Thanks to: https://chromium.googlesource.com/external/github.com/google/googletest/+/HEAD/googletest/README.md
 
 # Download and unpack googletest at configure time
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
-    configure_file(CMakeLists.txt.gtest ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}/CMakeLists.txt)
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_RECIPE_DIR}/CMakeLists.txt)
+    configure_file(CMakeLists.txt.gtest ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_RECIPE_DIR}/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_RECIPE_DIR}"
         RESULT_VARIABLE result)
     if(result)
         message(FATAL_ERROR "CMake step for googletest failed: ${result}")
     endif()
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_DOWNLOAD_DIR}")
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_RECIPE_DIR}")
+    message("patch googletest")
+    execute_process(COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/googletest.patch WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_SOURCE_DIR})
 endif()
 
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/googletest-src")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_SOURCE_DIR}")
 
 add_subdirectory(${TEST_DIR})
 
