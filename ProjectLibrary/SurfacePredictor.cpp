@@ -44,7 +44,9 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
 
            // loop
            float prev_sdf;
-           float sdf;
+
+           // silence maybe-uninitialized warning
+           float sdf = std::numeric_limits<float>::infinity();
 
            bool is_first_sdf = true;
            bool found_sign_change = false;
@@ -151,7 +153,9 @@ void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeig
 
             // loop
             float prev_sdf;
-            float sdf;
+
+            // silence maybe-uninitialized warning
+            float sdf = std::numeric_limits<float>::infinity();
 
             bool is_first_sdf = true;
             bool found_sign_change = false;
