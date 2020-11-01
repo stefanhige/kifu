@@ -1,4 +1,5 @@
 #include "PoseEstimator.h"
+#include "StopWatch.h"
 
 
 void PoseEstimator::setTarget(PointCloud& input)
@@ -11,7 +12,7 @@ void PoseEstimator::setSource(PointCloud& input)
     m_source = input;
 }
 
-void PoseEstimator::setTarget(std::vector<Vector3f> points, std::vector<Vector3f> normals)
+void PoseEstimator::setTarget(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals)
 {
     m_target.points = points;
     m_target.normals = normals;
@@ -21,12 +22,12 @@ void PoseEstimator::setTarget(std::vector<Vector3f> points, std::vector<Vector3f
 
 }
 
-void PoseEstimator::setSource(std::vector<Vector3f> points, std::vector<Vector3f> normals)
+void PoseEstimator::setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals)
 {
     setSource(points, normals, 1);
 }
 
-void PoseEstimator::setSource(std::vector<Vector3f> points, std::vector<Vector3f> normals, unsigned int downsample)
+void PoseEstimator::setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals, unsigned int downsample)
 {
     if (downsample == 1)
     {
@@ -104,7 +105,8 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
     // The initial estimate can be given as an argument.
     Matrix4f estimatedPose = initialPose;
 
-    for (int i = 0; i < m_nIter; ++i) {
+    for (int i = 0; i < m_nIter; ++i)
+    {
         auto transformedPoints = transformPoint(m_source.points, estimatedPose);
         auto transformedNormals = transformNormal(m_source.normals, estimatedPose);
         auto matches = m_nearestNeighborSearch->queryMatches(transformedPoints);

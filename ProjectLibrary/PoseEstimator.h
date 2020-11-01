@@ -13,10 +13,10 @@ public:
 
     void setTarget(PointCloud& input);
     void setSource(PointCloud& input);
-    void setTarget(std::vector<Vector3f> points, std::vector<Vector3f> normals);
-    void setSource(std::vector<Vector3f> points, std::vector<Vector3f> normals);
+    void setTarget(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals);
+    void setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals);
     // for a downsample factor of n: only take every n-th point.
-    void setSource(std::vector<Vector3f> points, std::vector<Vector3f> normals, unsigned int downsample);
+    void setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals, unsigned int downsample);
     // debug method
     void printPoints();
     // estimate pose. optional argument: initial pose
