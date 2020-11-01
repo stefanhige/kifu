@@ -44,7 +44,7 @@ struct PointCloud
 
         std::vector<Vector3f> points_;
         std::vector<Vector3f> normals_;
-        for (uint i = 0; i < pointsAndNormalsValid.size(); ++i)
+        for (size_t i = 0; i < pointsAndNormalsValid.size(); ++i)
         {
             if(pointsAndNormalsValid[i])
             {
@@ -65,10 +65,11 @@ struct PointCloud
 class Tsdf
 {
 public:
-    Tsdf(unsigned int size, float voxelSize)
+    Tsdf(size_t size, float voxelSize)
         : m_voxelSize(voxelSize)
     {
         assert_ndbg(!(size % 2));
+        assert_ndbg(size < static_cast<size_t>(std::cbrt(SIZE_MAX)));
         m_tsdf = new float[size*size*size];
 
         // initialize with zeros
@@ -123,7 +124,7 @@ public:
         m_voxelSize = max_span / (m_size - 1);
     }
 
-    float& operator()(int x, int y, int z)
+    float& operator()(const int x, const int y, const int z)
     {
         assert_ndbg(x < m_size && x >= 0);
         assert_ndbg(y < m_size && y >= 0);
@@ -131,7 +132,7 @@ public:
         return m_tsdf[x + y*m_size + z*m_size*m_size];
     }
 
-    float operator()(int x, int y, int z) const
+    float operator()(const int x, const int y, const int z) const
     {
         assert_ndbg(x < m_size && x >= 0);
         assert_ndbg(y < m_size && y >= 0);
@@ -213,7 +214,13 @@ public:
     }
 
     Vector3f getOrigin() const
-    {
+    {//    float operator()(int x, int y, int z) const
+        //    {
+        //        assert_ndbg(x < m_size && x >= 0);
+        //        assert_ndbg(y < m_size && y >= 0);
+        //        assert_ndbg(z < m_size && z >= 0);
+        //        return m_tsdf[x + y*m_size + z*m_size*m_size];
+        //    }
         return m_origin;
     }
 
@@ -276,7 +283,7 @@ public:
       fprintf(fp, "end_header\n");
 
       // point cloud for ply file
-      for (int i = 0; i < m_size * m_size * m_size; ++i)
+      for (size_t i = 0; i < m_size * m_size * m_size; ++i)
       {
         if (std::abs(m_tsdf[i]) < tsdf_threshold && m_weight[i] > weight_threshold)
         {
@@ -325,7 +332,7 @@ private:
     float* m_tsdf;
     uint_least8_t* m_weight;
     uint_least8_t* m_color;
-    uint m_size;
+    size_t m_size;
     Vector3f m_origin = Vector3f(0, 0, 0);
     float m_voxelSize;
 };

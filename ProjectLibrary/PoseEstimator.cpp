@@ -39,10 +39,10 @@ void PoseEstimator::setSource(const std::vector<Vector3f>& points, const std::ve
     }
     else
     {
-        int nPoints = std::min(points.size(), normals.size()) / downsample;
+        size_t nPoints = std::min(points.size(), normals.size()) / downsample;
         m_source.points = std::vector<Vector3f>(nPoints);
         m_source.normals = std::vector<Vector3f>(nPoints);
-        for (int i = 0; i < nPoints; ++i)
+        for (size_t i = 0; i < nPoints; ++i)
         {
             m_source.points[i] = points[i*downsample];
             m_source.normals[i] = normals[i*downsample];
@@ -118,7 +118,7 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
 
         // Add all matches to the sourcePoints and targetPoints vectors,
         // so that sourcePoints[i] matches targetPoints[i].
-        for (uint j = 0; j < transformedPoints.size(); j++)
+        for (size_t j = 0; j < transformedPoints.size(); j++)
         {
             const auto& match = matches[j];
             if (match.idx >= 0)
@@ -140,13 +140,13 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
 
 Matrix4f NearestNeighborPoseEstimator::solvePointToPlane(const std::vector<Vector3f>& sourcePoints, const std::vector<Vector3f>& targetPoints, const std::vector<Vector3f>& targetNormals)
 {
-    const unsigned nPoints = sourcePoints.size();
+    const size_t nPoints = sourcePoints.size();
 
     // Build the system
     MatrixXf A = MatrixXf::Zero(4 * nPoints, 6);
     VectorXf b = VectorXf::Zero(4 * nPoints);
 
-    for (unsigned i = 0; i < nPoints; i++)
+    for (size_t i = 0; i < nPoints; i++)
     {
         const auto& s = sourcePoints[i];
         const auto& d = targetPoints[i];
@@ -203,9 +203,9 @@ Matrix4f NearestNeighborPoseEstimator::solvePointToPlane(const std::vector<Vecto
 
 void NearestNeighborPoseEstimator::pruneCorrespondences(const std::vector<Vector3f>& sourceNormals, const std::vector<Vector3f>& targetNormals, std::vector<Match>& matches)
 {
-    const uint nPoints = sourceNormals.size();
+    const size_t nPoints = sourceNormals.size();
 
-    for (uint i = 0; i < nPoints; ++i)
+    for (size_t i = 0; i < nPoints; ++i)
     {
         Match& match = matches[i];
         if (match.idx >= 0)

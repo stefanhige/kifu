@@ -17,6 +17,7 @@ void SurfaceMeasurer::registerInput(float* depthMap)
 
 void SurfaceMeasurer::process()
 {
+    smoothInput();
     computeVertexAndNormalMap();
 }
 

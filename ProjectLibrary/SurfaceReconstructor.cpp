@@ -9,8 +9,8 @@ SurfaceReconstructor::SurfaceReconstructor(std::shared_ptr<Tsdf> tsdf, Matrix3f 
 
 void SurfaceReconstructor::reconstruct(const float* rawDepthMap,
                                        const uint8_t* rawColorMap,
-                                       const unsigned int imageHeight,
-                                       const unsigned int imageWidth,
+                                       const uint imageHeight,
+                                       const uint imageWidth,
                                        const Matrix4f cameraToWorld)
 {
 
@@ -18,7 +18,7 @@ void SurfaceReconstructor::reconstruct(const float* rawDepthMap,
     // loop over idx
 
     #pragma omp parallel for
-    for(uint idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
+    for(size_t idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
     {
 
         Vector4f globalPoint = m_tsdf->getPoint(idx);

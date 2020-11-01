@@ -10,7 +10,7 @@ public:
     SurfaceReconstructor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIntrinsics);
 
     // reconstruct surfaces from rawDepthMap with pose cameraToWorld and integrate it into the global model
-    void reconstruct(const float* rawDepthMap, const uint8_t* rawColorMap, const unsigned int imageHeight, const unsigned int imageWidth, const Matrix4f cameraToWorld);
+    void reconstruct(const float* rawDepthMap, const uint8_t* rawColorMap, const uint imageHeight, const uint imageWidth, const Matrix4f cameraToWorld);
 
 private:
     std::shared_ptr<Tsdf> m_tsdf;
