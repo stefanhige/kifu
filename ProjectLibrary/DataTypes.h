@@ -12,9 +12,11 @@
 #ifdef TIMING_ENABLED
 #define tic() (omp_get_wtime())
 #define toc(a) (printf("%s, %i: dur %f s\n", __FILE__, __LINE__, omp_get_wtime() - a))
+#define rtoc(a) (omp_get_wtime() - a)
 #else
 #define tic() ((double)0)
 #define toc(a) ((void)a)
+#define rtoc(a) ((double)0)
 #endif
 
 // release-build assertion

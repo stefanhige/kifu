@@ -16,7 +16,6 @@ void SurfaceReconstructor::reconstruct(const float* rawDepthMap,
 
     // for each point in the tsdf:
     // loop over idx
-    double begin = tic();
 
     #pragma omp parallel for
     for(uint idx=0; idx < (m_tsdf->getSize()*m_tsdf->getSize()*m_tsdf->getSize()); ++idx)
@@ -68,5 +67,4 @@ void SurfaceReconstructor::reconstruct(const float* rawDepthMap,
             }
         }
     }
-    toc(begin);
 }

@@ -22,13 +22,8 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
    pointCloud.normalsValid.resize(depthImageHeight*depthImageWidth);
    pointCloud.normals.resize(depthImageHeight*depthImageWidth);
 
-   auto begin = tic();
-   //#pragma omp parallel for
-   // collapse(2) seems to make it slower
-//   for(uint y_pixel=480/2-1; y_pixel < 480/2; ++y_pixel)
-//   {
-//       for(uint x_pixel=640/2-1; x_pixel < 640/2; ++x_pixel)
-//       {
+   #pragma omp parallel for
+//collapse(2) seems to make it slower
    for(uint y_pixel=0; y_pixel < depthImageHeight; ++y_pixel)
    {
        for(uint x_pixel=0; x_pixel < depthImageWidth; ++x_pixel)
@@ -122,7 +117,6 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
            }
        }
    }
-   toc(begin);
 
    return pointCloud;
 }

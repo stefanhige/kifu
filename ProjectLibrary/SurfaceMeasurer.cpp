@@ -40,7 +40,6 @@ void SurfaceMeasurer::computeVertexAndNormalMap()
     float cX = m_DepthIntrinsics(0, 2);
     float cY = m_DepthIntrinsics(1, 2);
 
-    auto begin = tic();
     #pragma omp parallel for collapse(2)
     for(uint y = 0; y < m_DepthImageHeight; ++y)
     {
@@ -62,10 +61,8 @@ void SurfaceMeasurer::computeVertexAndNormalMap()
 
         }
     }
-    toc(begin);
 
     const float maxDistHalve = 0.05f;
-    begin = tic();
     #pragma omp parallel for collapse(2)
     for(uint y = 1; y < m_DepthImageHeight-1; ++y)
     {
@@ -87,7 +84,6 @@ void SurfaceMeasurer::computeVertexAndNormalMap()
             }
         }
     }
-    toc(begin);
     // edge regions
     for (uint x = 0; x < m_DepthImageWidth; ++x) {
         m_normalMap[x] = Vector3f(MINF, MINF, MINF);

@@ -67,7 +67,7 @@ public:
 		if (m_currentIdx == -1) m_currentIdx = 0;
 		else m_currentIdx += m_increment;
 
-		if ((unsigned int)m_currentIdx >= (unsigned int)m_filenameColorImages.size()) return false;
+        if ((unsigned int)m_currentIdx >= (unsigned int)m_filenameColorImages.size()) return true;
 
 		std::cout << "ProcessNextFrame [" << m_currentIdx << " | " << m_filenameColorImages.size() << "]" << std::endl;
 
@@ -99,7 +99,7 @@ public:
 		}
 		m_currentTrajectory = m_trajectory[idx];
 
-		return true;
+        return false;
 	}
 
 	unsigned int getCurrentFrameCnt() {

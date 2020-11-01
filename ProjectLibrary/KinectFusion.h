@@ -3,6 +3,8 @@
 #include <string>
 #include <assert.h>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 #include "Eigen.h"
 #include "VirtualSensor.h"
@@ -31,13 +33,20 @@ public:
     void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity()) const;
 
 private:
+    void prepareNextFrame(bool &result);
+
     std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
     std::unique_ptr<PoseEstimator> m_PoseEstimator;
     std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
     std::unique_ptr<SurfacePredictor> m_SurfacePredictor;
 
+    PointCloud m_nextFrame;
+    std::mutex m_nextFrameMutex;
+
+
     Matrix4f m_CamToWorld;
     Matrix4f m_currentPose;
+
     VirtualSensor* m_InputHandle;
     std::string param;
     std::shared_ptr<Tsdf> m_tsdf;
