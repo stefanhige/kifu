@@ -134,9 +134,9 @@ bool KiFuModel::processNextFrame()
     return true;
 }
 
-void KiFuModel::saveTsdf(std::string filename) const
+void KiFuModel::saveTsdf(std::string filename, float tsdfThreshold, float weightThreshold) const
 {
-    m_tsdf->writeToFile(filename, 0.01, 0);
+    m_tsdf->writeToFile(filename, tsdfThreshold, weightThreshold);
 }
 
 void KiFuModel::saveScreenshot(std::string filename, const Matrix4f pose) const

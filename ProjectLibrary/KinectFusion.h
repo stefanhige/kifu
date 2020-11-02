@@ -27,7 +27,7 @@ public:
     bool processNextFrame();
 
     // debug method
-    void saveTsdf(std::string filename) const;
+    void saveTsdf(std::string filename, float tsdfThreshold = 0.01, float weightThreshold = 0) const;
 
     // debug method
     void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity()) const;

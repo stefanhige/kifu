@@ -38,13 +38,14 @@ int main()
     }
 
     KiFuModel model(sensor);
-    for(int i=0; i<100; i++)
+    int nFrames = 50;
+    for(int i=0; i<nFrames; i++)
     {
         StopWatch watch;
         model.processNextFrame();
     }
 
-    model.saveTsdf("tsdf_frame3.ply");
+    model.saveTsdf("tsdf_after_frame" + std::to_string(nFrames + 1) + ".ply", 0.01, nFrames/2);
     model.saveScreenshot("screenshot.png");
     return 0;
 }

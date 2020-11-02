@@ -4,6 +4,7 @@ project(unitTests)
 set(SOURCES
     tests.cpp
     LinkTest.cpp
+    TsdfTest.cpp
 )
 
 add_executable(unitTests ${SOURCES})
