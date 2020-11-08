@@ -48,6 +48,5 @@ private:
     Matrix4f m_currentPose;
 
     VirtualSensor* m_InputHandle;
-    std::string param;
     std::shared_ptr<Tsdf> m_tsdf;
 };

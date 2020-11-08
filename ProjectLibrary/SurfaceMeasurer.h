@@ -29,13 +29,9 @@ private:
     void computeVertexAndNormalMap();
     // paramters needed for backprojection
     Matrix3f m_DepthIntrinsics;
-    uint m_DepthImageHeight;
-    uint m_DepthImageWidth;
+    size_t m_DepthImageHeight;
+    size_t m_DepthImageWidth;
     float* m_rawDepthMap;
-    // PointCloud
-    std::vector<Vector3f> m_vertexMap;
-    std::vector<bool> m_vertexValidityMap;
-    std::vector<Vector3f> m_normalMap;
-    std::vector<bool> m_normalValidityMap;
 
+    PointCloud m_pointCloud;
 };

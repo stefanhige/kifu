@@ -30,6 +30,14 @@
 // all std::vectors should always have eqal length, although this is not enforced by the class!
 struct PointCloud
 {
+    PointCloud(){}
+    PointCloud(size_t size)
+        : points(size),
+          pointsValid(size),
+          normals(size),
+          normalsValid(size)
+    {}
+
     std::vector<Vector3f> points;
     std::vector<bool> pointsValid;
     std::vector<Vector3f> normals;

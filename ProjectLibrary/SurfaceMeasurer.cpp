@@ -4,10 +4,7 @@ SurfaceMeasurer::SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, uint DepthImag
     : m_DepthIntrinsics(DepthIntrinsics),
       m_DepthImageHeight(DepthImageHeight),
       m_DepthImageWidth(DepthImageWidth),
-      m_vertexMap(DepthImageHeight*DepthImageWidth),
-      m_vertexValidityMap(DepthImageHeight*DepthImageWidth),
-      m_normalMap(DepthImageHeight*DepthImageWidth),
-      m_normalValidityMap(DepthImageHeight*DepthImageWidth)
+      m_pointCloud(DepthImageHeight*DepthImageWidth)
 {}
 
 void SurfaceMeasurer::registerInput(float* depthMap)
@@ -23,16 +20,16 @@ void SurfaceMeasurer::process()
 
 PointCloud SurfaceMeasurer::getPointCloud()
 {
-    return PointCloud{m_vertexMap, m_vertexValidityMap, m_normalMap, m_normalValidityMap};
+    return m_pointCloud;
 }
 
 void SurfaceMeasurer::computeVertexAndNormalMap()
 {
-    m_vertexMap.reserve(m_DepthImageHeight*m_DepthImageWidth);
-    m_vertexValidityMap.reserve(m_DepthImageHeight*m_DepthImageWidth);
+    //m_pointCloud.points.reserve(m_DepthImageHeight*m_DepthImageWidth);
+    //m_pointCloud.pointsValid.reserve(m_DepthImageHeight*m_DepthImageWidth);
 
-    m_normalMap = std::vector<Vector3f>(m_DepthImageHeight*m_DepthImageWidth);
-    m_normalValidityMap = std::vector<bool>(m_DepthImageHeight*m_DepthImageWidth);
+    //m_pointCloud.normals = std::vector<Vector3f>(m_DepthImageHeight*m_DepthImageWidth);
+    //m_pointCloud.normalsValid = std::vector<bool>(m_DepthImageHeight*m_DepthImageWidth);
 
     //#pragma omp parallel for
 
@@ -50,14 +47,14 @@ void SurfaceMeasurer::computeVertexAndNormalMap()
             const float depth = m_rawDepthMap[idx];
             if (depth == MINF || depth == NAN)
             {
-                m_vertexMap[idx] = Vector3f(MINF, MINF, MINF);
-                m_vertexValidityMap[idx] = false;
+                m_pointCloud.points[idx] = Vector3f(MINF, MINF, MINF);
+                m_pointCloud.pointsValid[idx] = false;
             }
             else
             {
                 // backproject to camera space
-                m_vertexMap[idx] = Vector3f((x - cX) / fovX * depth, (y - cY) / fovY * depth, depth);
-                m_vertexValidityMap[idx] = true;
+                m_pointCloud.points[idx] = Vector3f((x - cX) / fovX * depth, (y - cY) / fovY * depth, depth);
+                m_pointCloud.pointsValid[idx] = true;
             }
 
         }
@@ -74,25 +71,25 @@ void SurfaceMeasurer::computeVertexAndNormalMap()
             const float dv = 0.5f * (m_rawDepthMap[idx + m_DepthImageWidth] - m_rawDepthMap[idx - m_DepthImageWidth]);
             if (!std::isfinite(du) || !std::isfinite(dv) || std::abs(du) > maxDistHalve || std::abs(dv) > maxDistHalve)
             {
-                m_normalMap[idx] = Vector3f(MINF, MINF, MINF);
-                m_normalValidityMap[idx] = false;
+                m_pointCloud.normals[idx] = Vector3f(MINF, MINF, MINF);
+                m_pointCloud.normalsValid[idx] = false;
             }
             else
             {
-                m_normalMap[idx] = Vector3f(du, dv, -1);
-                m_normalMap[idx].normalize();
-                m_normalValidityMap[idx] = true;
+                m_pointCloud.normals[idx] = Vector3f(du, dv, -1);
+                m_pointCloud.normals[idx].normalize();
+                m_pointCloud.normalsValid[idx] = true;
             }
         }
     }
     // edge regions
     for (uint x = 0; x < m_DepthImageWidth; ++x) {
-        m_normalMap[x] = Vector3f(MINF, MINF, MINF);
-        m_normalMap[x + (m_DepthImageHeight - 1) * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
+        m_pointCloud.normals[x] = Vector3f(MINF, MINF, MINF);
+        m_pointCloud.normals[x + (m_DepthImageHeight - 1) * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
     }
     for (uint y = 0; y < m_DepthImageHeight; ++y) {
-        m_normalMap[y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
-        m_normalMap[(m_DepthImageWidth - 1) + y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
+        m_pointCloud.normals[y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
+        m_pointCloud.normals[(m_DepthImageWidth - 1) + y * m_DepthImageWidth] = Vector3f(MINF, MINF, MINF);
     }
 }
 
