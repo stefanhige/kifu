@@ -31,7 +31,7 @@ set_target_properties(${PROJECT_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 #include directories and libraries!
 target_include_directories(${PROJECT_LIB} PUBLIC utils)
 
-target_include_directories(${PROJECT_LIB} PUBLIC ${Eigen3_INCLUDE_DIR})
+target_include_directories(${PROJECT_LIB} SYSTEM PUBLIC ${Eigen3_INCLUDE_DIR})
 target_include_directories(${PROJECT_LIB} SYSTEM PUBLIC ${FLANN_INCLUDE_DIR})
 
 target_link_libraries(${PROJECT_LIB} PUBLIC general freeimage lz4 -L${FLANN_LIB_DIR})

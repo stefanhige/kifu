@@ -1,16 +1,12 @@
 #include "KinectFusion.h"
 #include "VirtualSensor.h"
-
-#if __GNUC__ > 8
-#define HAS_STD_FS
 #include <filesystem>
-#endif
 
 #include "StopWatch.h"
 
 int main()
 {
-#ifdef HAS_STD_FS
+
     // load video
 
     std::string filenameIn = std::string("../kifu/data/rgbd_dataset_freiburg1_xyz/");
@@ -24,9 +20,6 @@ int main()
         std::cout << "No input files at folder " << dataFolderLocation << std::endl;
         return -1;
     }
-#else
-    std::string dataFolderLocation = std::string("../../kifu/data/rgbd_dataset_freiburg1_xyz/");
-#endif
 
     std::cout << "Initialize virtual sensor..." << std::endl;
 
