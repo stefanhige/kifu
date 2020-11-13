@@ -129,7 +129,7 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
         }
 
         // need at least 3 points
-        assert_ndbg(sourcePoints.size() >= 3);
+        ASSERT_NDBG(sourcePoints.size() >= 3);
         estimatedPose = solvePointToPlane(sourcePoints, targetPoints, m_target.normals) * estimatedPose;
     }
 

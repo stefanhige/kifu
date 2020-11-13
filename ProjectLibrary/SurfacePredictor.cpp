@@ -253,8 +253,8 @@ bool SurfacePredictor::trilinear_interpolate(const Vector3f& point, float& value
     // valid interpolation only possible with:
     // x >= 0, y>=0, z>=0 with equality
     // x < max_x, y < max_y ... no equality!
-    assert_ndbg(!((x < 0) || (y < 0) || (z < 0)));
-    assert_ndbg(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
+    ASSERT_NDBG(!((x < 0) || (y < 0) || (z < 0)));
+    ASSERT_NDBG(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
 
     // notation follows
     // S. Parker: "Interactive Ray Tracing for Isosurface Rendering" 1999
@@ -317,8 +317,8 @@ bool SurfacePredictor::trilinear_interpolate_color(const Vector3f &point, uint8_
     // valid interpolation only possible with:
     // x >= 0, y>=0, z>=0 with equality
     // x < max_x, y < max_y ... no equality!
-    assert_ndbg(!((x < 0) || (y < 0) || (z < 0)));
-    assert_ndbg(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
+    ASSERT_NDBG(!((x < 0) || (y < 0) || (z < 0)));
+    ASSERT_NDBG(!((x >= m_tsdf->getSize() - 1) || (y >= m_tsdf->getSize() - 1) || (z >= m_tsdf->getSize() - 1)));
 
     // notation follows
     // S. Parker: "Interactive Ray Tracing for Isosurface Rendering" 1999

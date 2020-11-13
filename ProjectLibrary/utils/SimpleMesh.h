@@ -281,7 +281,7 @@ public:
 		for (unsigned int i = 0; i < numP; i++) {
 			unsigned int num_vs;
 			file >> num_vs;
-            assert_ndbg(num_vs == 3 && "We can only read triangular mesh.");
+            ASSERT_NDBG(num_vs == 3 && "We can only read triangular mesh.");
 			
 			Triangle t;
 			file >> t.idx0 >> t.idx1 >> t.idx2;

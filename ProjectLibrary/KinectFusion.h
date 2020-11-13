@@ -35,6 +35,8 @@ public:
 private:
     void prepareNextFrame(bool &result);
 
+    VirtualSensor* m_InputHandle;
+
     std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
     std::unique_ptr<PoseEstimator> m_PoseEstimator;
     std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
@@ -45,8 +47,9 @@ private:
 
 
     Matrix4f m_CamToWorld;
-    Matrix4f m_currentPose;
+    std::vector<Matrix4f> m_currentPose;
+    std::vector<Matrix4f> m_currentPoseGroundTruth;
+    const Matrix4f m_refPoseGroundTruth;
 
-    VirtualSensor* m_InputHandle;
     std::shared_ptr<Tsdf> m_tsdf;
 };

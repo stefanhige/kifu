@@ -2,9 +2,10 @@
 #include "StopWatch.h"
 
 
-KiFuModel::KiFuModel(VirtualSensor &InputHandle)    : m_InputHandle(&InputHandle)
+KiFuModel::KiFuModel(VirtualSensor &InputHandle)
+    : m_InputHandle(&InputHandle),
+      m_refPoseGroundTruth((m_InputHandle->processNextFrame(), m_InputHandle->getTrajectory()))
 {
-    m_InputHandle->processNextFrame();
     m_SurfaceMeasurer = std::make_unique<SurfaceMeasurer>(m_InputHandle->getDepthIntrinsics(),
                                             m_InputHandle->getDepthImageHeight(),
                                             m_InputHandle->getDepthImageWidth());
@@ -38,11 +39,15 @@ KiFuModel::KiFuModel(VirtualSensor &InputHandle)    : m_InputHandle(&InputHandle
 
     m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
-    m_currentPose = Matrix4f::Identity();
+    m_currentPose.push_back(Matrix4f::Identity());
     m_CamToWorld = Matrix4f::Identity();
+    m_currentPoseGroundTruth.push_back(m_InputHandle->getTrajectory() * m_refPoseGroundTruth.inverse());
 
     bool res;
     prepareNextFrame(res);
+
+    //SimpleMesh camMesh = SimpleMesh::camera(m_currentPose.back());
+    //camMesh.writeMesh("CamMesh.off");
 
 //        PointCloud Frame0_predicted_pruned = Frame0_predicted;
 //        Frame0_predicted_pruned.prune();
@@ -96,7 +101,7 @@ bool KiFuModel::processNextFrame()
         //StopWatch watch("SurfacePredictor");
         prevFrame = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
                                                 m_InputHandle->getDepthImageWidth(),
-                                                m_currentPose);
+                                                m_currentPose.back());
         prevFrame.prune();
     }
 
@@ -108,23 +113,24 @@ bool KiFuModel::processNextFrame()
         const std::lock_guard<std::mutex> lock(m_nextFrameMutex);
         m_PoseEstimator->setSource(m_nextFrame.points, m_nextFrame.normals, 8);
     }
+    // read out current ground truth before launching thread
+    m_currentPoseGroundTruth.push_back(m_InputHandle->getTrajectory() * m_refPoseGroundTruth.inverse());
+
     bool isLastFrame;
     std::thread nextFrameThread(&KiFuModel::prepareNextFrame, this, std::ref(isLastFrame));
 
     m_CamToWorld = m_PoseEstimator->estimatePose(m_CamToWorld);
-    m_currentPose = m_CamToWorld.inverse();
+    m_currentPose.push_back(m_CamToWorld.inverse());
+    ASSERT_NDBG(m_currentPose.size() == m_currentPoseGroundTruth.size())
 
     nextFrameThread.join();
-
-
-    //std::cout << m_currentPose << std::endl;
 
     // integrate the new frame in the tsdf
     m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
                                         m_InputHandle->getColorRGBX(),
                                         m_InputHandle->getDepthImageHeight(),
                                         m_InputHandle->getDepthImageWidth(),
-                                        m_currentPose);
+                                        m_currentPose.back());
 
     // actually skips the last frame, but that's ok
     if(isLastFrame)

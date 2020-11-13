@@ -20,7 +20,7 @@
 #endif
 
 // release-build assertion
-#define assert_ndbg(expr) {if(!(expr)){ \
+#define ASSERT_NDBG(expr) {if(!(expr)){ \
     std::cerr << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << ":" << \
     " Assertion '" << \
     #expr \
@@ -64,7 +64,7 @@ struct PointCloud
         normals  = normals_;
         pointsValid = std::vector<bool>(points.size(), true);
         normalsValid = std::vector<bool>(normals.size(), true);
-        assert_ndbg((points.size() == normals.size()) && (pointsValid.size() == normalsValid.size()) && (points.size() == pointsValid.size()));
+        ASSERT_NDBG((points.size() == normals.size()) && (pointsValid.size() == normalsValid.size()) && (points.size() == pointsValid.size()));
     }
 };
 
@@ -76,8 +76,8 @@ public:
     Tsdf(size_t size, float voxelSize)
         : m_voxelSize(voxelSize)
     {
-        assert_ndbg(!(size % 2));
-        assert_ndbg(size < static_cast<size_t>(std::cbrt(SIZE_MAX)));
+        ASSERT_NDBG(!(size % 2));
+        ASSERT_NDBG(size < static_cast<size_t>(std::cbrt(SIZE_MAX)));
         m_tsdf = new float[size*size*size];
 
         // initialize with zeros
@@ -134,17 +134,17 @@ public:
 
     float& operator()(const int x, const int y, const int z)
     {
-        assert_ndbg(x < m_size && x >= 0);
-        assert_ndbg(y < m_size && y >= 0);
-        assert_ndbg(z < m_size && z >= 0);
+        ASSERT_NDBG(x < m_size && x >= 0);
+        ASSERT_NDBG(y < m_size && y >= 0);
+        ASSERT_NDBG(z < m_size && z >= 0);
         return m_tsdf[x + y*m_size + z*m_size*m_size];
     }
 
     float operator()(const int x, const int y, const int z) const
     {
-        assert_ndbg(x < m_size && x >= 0);
-        assert_ndbg(y < m_size && y >= 0);
-        assert_ndbg(z < m_size && z >= 0);
+        ASSERT_NDBG(x < m_size && x >= 0);
+        ASSERT_NDBG(y < m_size && y >= 0);
+        ASSERT_NDBG(z < m_size && z >= 0);
         return m_tsdf[x + y*m_size + z*m_size*m_size];
     }
 
@@ -240,9 +240,9 @@ public:
     // convert tuple of indices into linear index
     int ravel_index(const int x, const int y, const int z) const
     {
-        assert_ndbg(x < m_size && x >= 0);
-        assert_ndbg(y < m_size && y >= 0);
-        assert_ndbg(z < m_size && z >= 0);
+        ASSERT_NDBG(x < m_size && x >= 0);
+        ASSERT_NDBG(y < m_size && y >= 0);
+        ASSERT_NDBG(z < m_size && z >= 0);
         return x + y*m_size + z*m_size*m_size;
     }
 
@@ -254,7 +254,7 @@ public:
     // convert linear index to tuple of indices
     std::tuple<int, int, int> unravel_index(const int idx) const
     {
-        assert_ndbg(static_cast<uint>(idx) < m_size*m_size*m_size && idx >= 0);
+        ASSERT_NDBG(static_cast<uint>(idx) < m_size*m_size*m_size && idx >= 0);
         const int x = idx % m_size;
         const int z = idx / (m_size*m_size);
         const int y = (idx / m_size) % m_size;
