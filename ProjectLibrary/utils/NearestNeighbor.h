@@ -3,109 +3,127 @@
 
 #include "Eigen.h"
 
-struct Match {
-	int idx;
-	float weight;
+struct Match
+{
+    int idx;
+    float weight;
 };
 
-class NearestNeighborSearch {
+class NearestNeighborSearch
+{
 public:
-	virtual ~NearestNeighborSearch() {}
+    virtual ~NearestNeighborSearch() {}
 
-	virtual void setMatchingMaxDistance(float maxDistance) {
-		m_maxDistance = maxDistance;
-	}
+    virtual void setMatchingMaxDistance(float maxDistance)
+    {
+        m_maxDistance = maxDistance;
+    }
 
-	virtual void buildIndex(const std::vector<Eigen::Vector3f>& targetPoints) = 0;
-	virtual std::vector<Match> queryMatches(const std::vector<Vector3f>& transformedPoints) = 0;
+    virtual void buildIndex(const std::vector<Eigen::Vector3f>& targetPoints) = 0;
+    virtual std::vector<Match> queryMatches(const std::vector<Vector3f>& transformedPoints) = 0;
 
 protected:
-	float m_maxDistance;
+    float m_maxDistance;
 
-	NearestNeighborSearch() : m_maxDistance{ 0.005f } {}
+    NearestNeighborSearch() : m_maxDistance{ 0.005f } {}
 };
 
 
 /**
  * Brute-force nearest neighbor search.
  */
-class NearestNeighborSearchBruteForce : public NearestNeighborSearch {
+class NearestNeighborSearchBruteForce : public NearestNeighborSearch
+{
 public:
-	NearestNeighborSearchBruteForce() : NearestNeighborSearch() {}
+    NearestNeighborSearchBruteForce() : NearestNeighborSearch() {}
 
-	void buildIndex(const std::vector<Eigen::Vector3f>& targetPoints) {
-		m_points = targetPoints;
-	}
+    void buildIndex(const std::vector<Eigen::Vector3f>& targetPoints)
+    {
+        m_points = targetPoints;
+    }
 
-	std::vector<Match> queryMatches(const std::vector<Vector3f>& transformedPoints) {
-		const unsigned nMatches = transformedPoints.size();
-		std::vector<Match> matches(nMatches);
-		const unsigned nTargetPoints = m_points.size();
-		std::cout << "nMatches: " << nMatches << std::endl;
-		std::cout << "nTargetPoints: " << nTargetPoints << std::endl;
+    std::vector<Match> queryMatches(const std::vector<Vector3f>& transformedPoints)
+    {
+        const unsigned nMatches = transformedPoints.size();
+        std::vector<Match> matches(nMatches);
+        const unsigned nTargetPoints = m_points.size();
+        std::cout << "nMatches: " << nMatches << std::endl;
+        std::cout << "nTargetPoints: " << nTargetPoints << std::endl;
 
-		#pragma omp parallel for
-        for (uint i = 0; i < nMatches; i++) {
-			matches[i] = getClosestPoint(transformedPoints[i]);
-		}
+#pragma omp parallel for
+        for (uint i = 0; i < nMatches; i++)
+        {
+            matches[i] = getClosestPoint(transformedPoints[i]);
+        }
 
-		return matches;
-	}
+        return matches;
+    }
 
 private:
-	std::vector<Eigen::Vector3f> m_points;
+    std::vector<Eigen::Vector3f> m_points;
 
-	Match getClosestPoint(const Vector3f& p) {
-		int idx = -1;
+    Match getClosestPoint(const Vector3f& p)
+    {
+        int idx = -1;
 
-		float minDist = std::numeric_limits<float>::max();
-		for (unsigned int i = 0; i < m_points.size(); ++i) {
-			float dist = (p - m_points[i]).norm();
-			if (minDist > dist) {
-				idx = i;
-				minDist = dist;
-			}
-		}
+        float minDist = std::numeric_limits<float>::max();
+        for (unsigned int i = 0; i < m_points.size(); ++i)
+        {
+            float dist = (p - m_points[i]).norm();
+            if (minDist > dist) {
+                idx = i;
+                minDist = dist;
+            }
+        }
 
-		if (minDist <= m_maxDistance)
-			return Match{ idx, 1.f };
-		else
-			return Match{ -1, 0.f };
-	}
+        if (minDist <= m_maxDistance)
+        {
+            return Match{ idx, 1.f };
+        }
+        else
+        {
+            return Match{ -1, 0.f };
+        }
+    }
 };
 
 
 /**
  * Nearest neighbor search using FLANN.
  */
-class NearestNeighborSearchFlann : public NearestNeighborSearch {
+class NearestNeighborSearchFlann : public NearestNeighborSearch
+{
 public:
-	NearestNeighborSearchFlann() :
-		NearestNeighborSearch(),
-		m_nTrees{ 1 },
-		m_index{ nullptr },
-		m_flatPoints{ nullptr }
+    NearestNeighborSearchFlann()
+        : NearestNeighborSearch(),
+          m_nTrees{ 1 },
+          m_index{ nullptr },
+          m_flatPoints{ nullptr }
 	{ }
 
-	~NearestNeighborSearchFlann() {
-		if (m_index) {
-			delete m_flatPoints;
-			delete m_index;
-			m_flatPoints = nullptr;
-			m_index = nullptr;
-		}
-	}
+    ~NearestNeighborSearchFlann()
+    {
+        if (m_index) {
+            delete m_flatPoints;
+            delete m_index;
+            m_flatPoints = nullptr;
+            m_index = nullptr;
+        }
+    }
 
-	void buildIndex(const std::vector<Eigen::Vector3f>& targetPoints) {
-		std::cout << "Initializing FLANN index with " << targetPoints.size() << " points." << std::endl;
+    void buildIndex(const std::vector<Eigen::Vector3f>& targetPoints)
+    {
+        std::cout << "Initializing FLANN index with " << targetPoints.size() << " points." << std::endl;
 
-		// FLANN requires that all the points be flat. Therefore we copy the points to a separate flat array.
-		m_flatPoints = new float[targetPoints.size() * 3];
-		for (size_t pointIndex = 0; pointIndex < targetPoints.size(); pointIndex++) {
-			for (size_t dim = 0; dim < 3; dim++) {
-				m_flatPoints[pointIndex * 3 + dim] = targetPoints[pointIndex][dim];
-			}
-		}
+        // FLANN requires that all the points be flat. Therefore we copy the points to a separate flat array.
+        m_flatPoints = new float[targetPoints.size() * 3];
+        for (size_t pointIndex = 0; pointIndex < targetPoints.size(); pointIndex++)
+        {
+            for (size_t dim = 0; dim < 3; dim++)
+            {
+                m_flatPoints[pointIndex * 3 + dim] = targetPoints[pointIndex][dim];
+            }
+        }
 
 		flann::Matrix<float> dataset(m_flatPoints, targetPoints.size(), 3);
 
@@ -116,16 +134,20 @@ public:
 		std::cout << "FLANN index created." << std::endl;
 	}
 
-	std::vector<Match> queryMatches(const std::vector<Vector3f>& transformedPoints) {
-		if (!m_index) {
+    std::vector<Match> queryMatches(const std::vector<Vector3f>& transformedPoints)
+    {
+        if (!m_index)
+        {
 			std::cout << "FLANN index needs to be build before querying any matches." << std::endl;
 			return {};
 		}
 
 		// FLANN requires that all the points be flat. Therefore we copy the points to a separate flat array.
 		float* queryPoints = new float[transformedPoints.size() * 3];
-		for (size_t pointIndex = 0; pointIndex < transformedPoints.size(); pointIndex++) {
-			for (size_t dim = 0; dim < 3; dim++) {
+        for (size_t pointIndex = 0; pointIndex < transformedPoints.size(); pointIndex++)
+        {
+            for (size_t dim = 0; dim < 3; dim++)
+            {
 				queryPoints[pointIndex * 3 + dim] = transformedPoints[pointIndex][dim];
 			}
 		}
