@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <math.h>
 
 template <int size, int sigma>
 struct GaussianKernel
@@ -7,9 +8,11 @@ struct GaussianKernel
     constexpr GaussianKernel()
         : kernel()
     {
-        static_assert(size>0);
+        static_assert(size > 0);
         static_assert(size % 2 == 1);
         static_assert(size < 13);
+        static_assert(sigma > 0);
+
         int it_r = size/2;
 
         float r = 0;
@@ -61,10 +64,19 @@ public:
     {
         std::copy(image, image+w*h, tempImage);
 
-#pragma omp parallel for collapse(2)
-        for(size_t x=it_s; x<= w-it_s; ++x)
+        /*
+        for(size_t x=it_s; x< w-it_s; ++x)
         {
-            for(size_t y=it_s; y<= h-it_s; ++y)
+            for(size_t y=it_s; y< h-it_s; ++y)
+            {
+                image[x + w*y] = evalKernel(tempImage, x, y);
+            }
+        }
+        */
+//#pragma omp parallel for
+        for(size_t x=0; x < w; ++x)
+        {
+            for(size_t y=0; y < h; ++y)
             {
                 image[x + w*y] = evalKernel(tempImage, x, y);
             }
@@ -80,7 +92,13 @@ private:
         {
             for (int j = -it_s; j <= it_s; j++)
             {
-                //res += kernel.at() * in[x+i + (y+j)*w];
+                // skip values at the corner (simulates zero-padding)
+                if(x+i < 0 || x+i >= w || y+j < 0 || y+j >= h)
+                {
+                    //std::cout << "skipping index[" << static_cast<int>(x+i) <<
+                    //             " " << static_cast<int>(y+j) << "]" << std::endl;
+                    continue;
+                }
                 res += kernel.kernel.at(i+it_s + (j+it_s)*size) * in[x+i + (y+j)*w];
             }
         }

@@ -5,6 +5,7 @@ set(SOURCES
     tests.cpp
     LinkTest.cpp
     TsdfTest.cpp
+    BilateralFilterTest.cpp
 )
 
 add_executable(unitTests ${SOURCES})

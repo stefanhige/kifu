@@ -31,7 +31,7 @@ void SurfaceMeasurer::smoothInputManual()
     saveDepthMap("before_m.png");
     {
         StopWatch watch("manual filtering");
-        auto filter = BilateralFilter<11,10>(m_DepthImageWidth, m_DepthImageHeight);
+        auto filter = BilateralFilter<5,5>(m_DepthImageWidth, m_DepthImageHeight);
         filter.apply(m_rawDepthMap);
     }
     saveDepthMap("after_m.png");
