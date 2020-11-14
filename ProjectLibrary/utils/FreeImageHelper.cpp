@@ -74,7 +74,14 @@ FreeImage FreeImage::ConvertToIntensity() const
 		}
 	}
 
-	return result;
+    return result;
+}
+
+void FreeImage::normalize()
+{
+    auto maxIntensity = *std::max_element(data, data + w*h*nChannels);
+    std::transform(data, data + w*h*nChannels, data, [&maxIntensity](float in) -> float {return in/maxIntensity;});
+
 }
 
 bool FreeImage::LoadImageFromFile(const std::string& filename, unsigned int width, unsigned int height)
@@ -155,9 +162,17 @@ bool FreeImage::SaveImageToFile(const std::string& filename, bool flipY)
 				col[c] = std::min(std::max(0, (int)(255.0f*data[nChannels * (w*j + i) + c])), 255);
 			}
 
-			color.rgbRed = col[0];
-			color.rgbGreen = col[1];
-			color.rgbBlue = col[2];
+            // assume greyscale image, if only one Channel is present.
+            if(nChannels == 1)
+            {
+                color.rgbRed = color.rgbGreen = color.rgbBlue = col[0];
+            }
+            else
+            {
+                color.rgbRed = col[0];
+                color.rgbGreen = col[1];
+                color.rgbBlue = col[2];
+            }
 			if (!flipY)	FreeImage_SetPixelColor(dib, i, h - 1 - j, &color);
 			else		FreeImage_SetPixelColor(dib, i, j, &color);
 		}
