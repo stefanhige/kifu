@@ -7,6 +7,7 @@ set(HEADERS
     utils/NearestNeighbor.h
     utils/SimpleMesh.h
     utils/StopWatch.h
+    utils/BilateralFilter.h
     DataTypes.h
     SurfaceReconstructor.h
     SurfaceMeasurer.h
@@ -43,3 +44,8 @@ link_directories(${FreeImage_LIBRARY_DIR})
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_LIB}  PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+find_package(OpenCV REQUIRED)
+target_include_directories(${PROJECT_LIB} PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_LIB}  PUBLIC ${OpenCV_LIBS})
+

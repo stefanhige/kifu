@@ -12,9 +12,45 @@ void SurfaceMeasurer::registerInput(float* depthMap)
     m_rawDepthMap = depthMap;
 }
 
+void SurfaceMeasurer::smoothInput()
+{
+    {
+        StopWatch watch("smoothInput_OpenCV");
+        cv::Mat rawDepthMap = cv::Mat{static_cast<int>(m_DepthImageHeight), static_cast<int>(m_DepthImageWidth), CV_32F, m_rawDepthMap};
+        cv::Mat rawDepthMapCopy = rawDepthMap.clone();
+        cv::bilateralFilter(rawDepthMapCopy, rawDepthMap, 5, 10, 10);
+
+        // needed, because opencv places nans instead of MINF
+        std::transform(m_rawDepthMap, m_rawDepthMap + m_DepthImageHeight*m_DepthImageWidth, m_rawDepthMap,
+                       [](float in) -> float {return std::isnan(in) ? MINF : in;});
+    }
+}
+void SurfaceMeasurer::smoothInputManual()
+{
+
+    saveDepthMap("before_m.png");
+    {
+        StopWatch watch("manual filtering");
+        auto filter = BilateralFilter<11,10>(m_DepthImageWidth, m_DepthImageHeight);
+        filter.apply(m_rawDepthMap);
+    }
+    saveDepthMap("after_m.png");
+
+    exit(0);
+
+}
+
+void SurfaceMeasurer::saveDepthMap(std::string filename)
+{
+    FreeImage image(m_DepthImageWidth, m_DepthImageHeight, 1);
+    std::copy(m_rawDepthMap, m_rawDepthMap + m_DepthImageHeight*m_DepthImageWidth, image.data);
+    image.normalize();
+    image.SaveImageToFile(filename);
+}
+
 void SurfaceMeasurer::process()
 {
-    smoothInput();
+    smoothInputManual();
     computeVertexAndNormalMap();
 }
 
