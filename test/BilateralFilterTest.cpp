@@ -18,11 +18,12 @@ protected:
     float* m_img;
 };
 
+
 TEST(GaussianKernelTest, TestTrivial)
 {
-    const auto kernel_1 = GaussianKernel<1,1>();
-    const auto kernel_5 = GaussianKernel<5,1>();
-    const auto kernel_7 = GaussianKernel<7,1>();
+    constexpr auto kernel_1 = GaussianKernel<1,1>();
+    constexpr auto kernel_5 = GaussianKernel<5,1>();
+    constexpr auto kernel_7 = GaussianKernel<7,1>();
 
     // kernels have the correct size
     EXPECT_EQ(kernel_1.kernel.size(), 1);
@@ -66,7 +67,7 @@ float normalization_constant(int kernel_size, float sigma)
 TEST(GaussianKernelTest, TestTrivialValues)
 {
     constexpr int sigma = 1;
-    const auto kernel_1 = GaussianKernel<1,sigma>();
+    constexpr auto kernel_1 = GaussianKernel<1,sigma>();
     const float center_1 = gauss_weight(0,0,sigma) / normalization_constant(1,sigma);
 
     // test the testing funcitons
@@ -81,7 +82,7 @@ TEST(GaussianKernelTest, TestValuesSigma1)
 {
     constexpr int sigma = 1;
     constexpr int kernel_size = 3;
-    const auto kernel_1 = GaussianKernel<kernel_size,sigma>();
+    constexpr auto kernel_1 = GaussianKernel<kernel_size,sigma>();
     const float center_1 = gauss_weight(0,0,sigma) / normalization_constant(kernel_size, sigma);
     const float side_1 = gauss_weight(1,0,sigma) / normalization_constant(kernel_size, sigma);
     const float edge_1 = gauss_weight(1,1,sigma) / normalization_constant(kernel_size, sigma);
@@ -104,7 +105,7 @@ TEST(GaussianKernelTest, TestValuesSigma10)
 {
     constexpr int sigma = 10;
     constexpr int kernel_size = 3;
-    const auto kernel_1 = GaussianKernel<kernel_size,sigma>();
+    constexpr auto kernel_1 = GaussianKernel<kernel_size,sigma>();
     const float center_1 = gauss_weight(0,0,sigma) / normalization_constant(kernel_size, sigma);
     const float side_1 = gauss_weight(1,0,sigma) / normalization_constant(kernel_size, sigma);
     const float edge_1 = gauss_weight(1,1,sigma) / normalization_constant(kernel_size, sigma);
@@ -122,7 +123,7 @@ TEST(GaussianKernelTest, TestValuesSigma10)
     EXPECT_FLOAT_EQ(side_1, kernel_1.kernel.at(7));
 
 }
-/*
+
 TEST_F(BilateralFilterTest, TestTrivial)
 {
     auto filter = BilateralFilter<1,1>(3,3);
@@ -137,7 +138,7 @@ TEST_F(BilateralFilterTest, TestTrivial)
     EXPECT_FLOAT_EQ(m_img[1], 0);
     EXPECT_FLOAT_EQ(m_img[4], 1);
 }
-*/
+
 
 TEST_F(BilateralFilterTest, TestFilterSize3)
 {
