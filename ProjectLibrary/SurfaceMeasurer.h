@@ -1,12 +1,13 @@
+#include <iterator>
+
 #include "Eigen.h"
 #include "DataTypes.h"
 #include "StopWatch.h"
 #include "FreeImageHelper.h"
 #include "BilateralFilter.h"
-#include <iterator>
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
+//#include <opencv2/core.hpp>
+//#include <opencv2/imgproc.hpp>
 
 // takes the raw depth data and backprojects it into 3D camera space
 class SurfaceMeasurer
@@ -25,11 +26,10 @@ public:
     PointCloud getPointCloud();
 
 private:
-    void smoothInputManual();
     void smoothInput();
-
     // backproject into camera space
     void computeVertexAndNormalMap();
+
     // paramters needed for backprojection
     Matrix3f m_DepthIntrinsics;
     size_t m_DepthImageHeight;

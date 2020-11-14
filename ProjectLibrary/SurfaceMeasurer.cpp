@@ -12,6 +12,7 @@ void SurfaceMeasurer::registerInput(float* depthMap)
     m_rawDepthMap = depthMap;
 }
 
+/*
 void SurfaceMeasurer::smoothInput()
 {
     {
@@ -25,19 +26,12 @@ void SurfaceMeasurer::smoothInput()
                        [](float in) -> float {return std::isnan(in) ? MINF : in;});
     }
 }
-void SurfaceMeasurer::smoothInputManual()
-{
-
-    saveDepthMap("before_m.png");
-    {
-        StopWatch watch("manual filtering");
-        auto filter = BilateralFilter<5,5>(m_DepthImageWidth, m_DepthImageHeight);
-        filter.apply(m_rawDepthMap);
-    }
-    saveDepthMap("after_m.png");
-
-    exit(0);
-
+*/
+void SurfaceMeasurer::smoothInput()
+{ 
+    //StopWatch watch("manual filtering");
+    auto filter = BilateralFilter<5,5>(m_DepthImageWidth, m_DepthImageHeight);
+    filter.apply(m_rawDepthMap);
 }
 
 void SurfaceMeasurer::saveDepthMap(std::string filename)
@@ -50,7 +44,7 @@ void SurfaceMeasurer::saveDepthMap(std::string filename)
 
 void SurfaceMeasurer::process()
 {
-    smoothInputManual();
+    smoothInput();
     computeVertexAndNormalMap();
 }
 

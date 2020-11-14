@@ -45,7 +45,7 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_LIB}  PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-find_package(OpenCV REQUIRED)
-target_include_directories(${PROJECT_LIB} PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_LIB}  PUBLIC ${OpenCV_LIBS})
+#find_package(OpenCV REQUIRED)
+#target_include_directories(${PROJECT_LIB} PUBLIC ${OpenCV_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_LIB}  PUBLIC ${OpenCV_LIBS})
 
