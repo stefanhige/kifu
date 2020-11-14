@@ -68,7 +68,7 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_BUILD_DIR}/Makefil
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_SOURCE_DIR}
         OUTPUT_VARIABLE output
         )
-    message(${output})
+   # message(${output})
 
     message("call cmake for flann")
     execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${FLANN_SOURCE_DIR}

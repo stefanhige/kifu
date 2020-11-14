@@ -7,16 +7,16 @@
  * @tparam size The size of size^2 gaussian kernel.
  * @tparam sigma Sigma of gaussian. Type is int because of being a template paramter.
  */
-template <int size, int sigma>
+template<int size, int sigma, typename T = float>
 struct GaussianKernel
 {
     constexpr GaussianKernel()
         : kernel()
     {
-        static_assert(size > 0);
-        static_assert(size % 2 == 1);
-        static_assert(size < 13);
-        static_assert(sigma > 0);
+        static_assert(size > 0, "Size has to be bigger than 0");
+        static_assert(size % 2 == 1, "Size needs to be a multiple of two");
+        static_assert(size < 13, "Size smaller than 14 not allowed"); //because 13 is also not allowed as it is not a multiple of two
+        static_assert(sigma > 0, "Sima needs to be bigger than 0");
 
         int it_r = size/2;
 
@@ -44,7 +44,7 @@ struct GaussianKernel
             el /= sum;
         }
     }
-    std::array<float, size*size> kernel;
+    std::array<T, size*size> kernel;
 };
 
 /**
@@ -101,7 +101,7 @@ private:
             for (int j = -it_s; j <= it_s; ++j)
             {
                 // skip values at the corner (simulates zero-padding)
-                if(x+i < 0 || x+i >= w || y+j < 0 || y+j >= h)
+                if(int(x)+i < 0 || int(x)+i >= w || int(y)+j < 0 || int(y)+j >= h)
                 {
                     //std::cout << "skipping index[" << static_cast<int>(x+i) <<
                     //             " " << static_cast<int>(y+j) << "]" << std::endl;
