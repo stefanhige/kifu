@@ -13,10 +13,10 @@ struct GaussianKernel
     constexpr GaussianKernel()
         : kernel()
     {
-        static_assert(size > 0, "Size has to be bigger than 0");
-        static_assert(size % 2 == 1, "Size needs to be a multiple of two");
-        static_assert(size < 13, "Size smaller than 14 not allowed"); //because 13 is also not allowed as it is not a multiple of two
-        static_assert(sigma > 0, "Sima needs to be bigger than 0");
+        static_assert(size > 0, "Size has to be greater than 0.");
+        static_assert(size % 2 == 1, "Size needs to be uneven.");
+        static_assert(size <= 13, "Consider a smaller kernel than 13.");
+        static_assert(sigma > 0, "Sigma needs to be greater than 0");
 
         int it_r = size/2;
 
