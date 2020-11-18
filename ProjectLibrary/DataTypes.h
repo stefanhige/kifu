@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <assert.h>
 #include <cstdint>
 #include "Eigen.h"
@@ -222,13 +223,7 @@ public:
     }
 
     Vector3f getOrigin() const
-    {//    float operator()(int x, int y, int z) const
-        //    {
-        //        assert_ndbg(x < m_size && x >= 0);
-        //        assert_ndbg(y < m_size && y >= 0);
-        //        assert_ndbg(z < m_size && z >= 0);
-        //        return m_tsdf[x + y*m_size + z*m_size*m_size];
-        //    }
+    {
         return m_origin;
     }
 
@@ -280,61 +275,69 @@ public:
           }
       }
 
-      // .ply file header
-      FILE *fp = fopen(file_name.c_str(), "w");
-      fprintf(fp, "ply\n");
-      fprintf(fp, "format binary_little_endian 1.0\n");
-      fprintf(fp, "element vertex %d\n", num_pts);
-      fprintf(fp, "property float x\n");
-      fprintf(fp, "property float y\n");
-      fprintf(fp, "property float z\n");
-      fprintf(fp, "end_header\n");
-
-      // point cloud for ply file
-      for (size_t i = 0; i < m_size * m_size * m_size; ++i)
+      std::ofstream file((file_name + "cpp"), std::ofstream::binary);
+      if(!file.is_open())
       {
-        if (std::abs(m_tsdf[i]) < tsdf_threshold && m_weight[i] > weight_threshold)
-        {
-          std::tuple<int, int, int> xyz = unravel_index(i);
-          float pt_base_x = m_origin.x() + std::get<0>(xyz) * m_voxelSize;
-          float pt_base_y = m_origin.y() + std::get<1>(xyz) * m_voxelSize;
-          float pt_base_z = m_origin.z() + std::get<2>(xyz) * m_voxelSize;
-          fwrite(&pt_base_x, sizeof(float), 1, fp);
-          fwrite(&pt_base_y, sizeof(float), 1, fp);
-          fwrite(&pt_base_z, sizeof(float), 1, fp);
-        }
+          std::cout << "Error opening file " << file_name << std::endl;
       }
-      fclose(fp);
+      else
+      {
+          // .ply file header
+          file << "ply\n";
+          file << "format binary_little_endian 1.0\n";
+          file << "element vertex " << num_pts << std::endl;
+          file << "property float x\n";
+          file << "property float y\n";
+          file << "property float z\n";
+          file << "end_header\n";
+
+          // point cloud for ply file
+          for (size_t i = 0; i < m_size * m_size * m_size; ++i)
+          {
+            if (std::abs(m_tsdf[i]) < tsdf_threshold && m_weight[i] > weight_threshold)
+            {
+              std::tuple<int, int, int> xyz = unravel_index(i);
+              float pt_base_x = m_origin.x() + std::get<0>(xyz) * m_voxelSize;
+              float pt_base_y = m_origin.y() + std::get<1>(xyz) * m_voxelSize;
+              float pt_base_z = m_origin.z() + std::get<2>(xyz) * m_voxelSize;
+              file.write(reinterpret_cast<char*>(&pt_base_x), sizeof(float));
+              file.write(reinterpret_cast<char*>(&pt_base_y), sizeof(float));
+              file.write(reinterpret_cast<char*>(&pt_base_z), sizeof(float));
+            }
+          }
+          file.close();
+        }
     }
 
-    // check if a point is inside the tsdf excluding the upper bound of all dimensions
-    // so indices of the tsdf, the point refers to are: > 0 and < m_size - 1
-    bool isValid(const Vector3f& point) const
-    {
-        Vector3f relPoint = point - getOrigin();
-
-        float x = relPoint.x() / getVoxelSize();
-        float y = relPoint.y() / getVoxelSize();
-        float z = relPoint.z() / getVoxelSize();
-
-        // for numeric stability: set negative values within 0.5 index to small positive number
-        x = (-0.5 < x && x < 0) ? std::numeric_limits<float>::epsilon() : x;
-        y = (-0.5 < y && y < 0) ? std::numeric_limits<float>::epsilon() : y;
-        z = (-0.5 < z && z < 0) ? std::numeric_limits<float>::epsilon() : z;
-
-        // valid interpolation only possible with:
-        // x >= 0, y>=0, z>=0 with equality
-        // x < max_x, y < max_y ... no equality!
-        if((x < 0) || (y < 0) || (z < 0))
+        // check if a point is inside the tsdf excluding the upper bound of all dimensions
+        // so indices of the tsdf, the point refers to are: > 0 and < m_size - 1
+        bool isValid(const Vector3f& point) const
         {
-            return false;
-        }
-        if((x >= m_size - 1) || (y >= m_size - 1) || (z >= m_size - 1))
-        {
-            return false;
-        }
-        return true;
+            Vector3f relPoint = point - getOrigin();
+
+            float x = relPoint.x() / getVoxelSize();
+            float y = relPoint.y() / getVoxelSize();
+            float z = relPoint.z() / getVoxelSize();
+
+            // for numeric stability: set negative values within 0.5 index to small positive number
+            x = (-0.5 < x && x < 0) ? std::numeric_limits<float>::epsilon() : x;
+            y = (-0.5 < y && y < 0) ? std::numeric_limits<float>::epsilon() : y;
+            z = (-0.5 < z && z < 0) ? std::numeric_limits<float>::epsilon() : z;
+
+            // valid interpolation only possible with:
+            // x >= 0, y>=0, z>=0 with equality
+            // x < max_x, y < max_y ... no equality!
+            if((x < 0) || (y < 0) || (z < 0))
+            {
+                return false;
+            }
+            if((x >= m_size - 1) || (y >= m_size - 1) || (z >= m_size - 1))
+            {
+                return false;
+            }
+            return true;
     }
+
 
 private:
     float* m_tsdf;
