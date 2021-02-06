@@ -81,6 +81,14 @@ struct PointCloud
 class Tsdf
 {
 public:
+    Tsdf() noexcept
+        : m_tsdf(nullptr),
+          m_weight(nullptr),
+          m_color(nullptr),
+          m_size(0),
+          m_voxelSize(0)
+    {}
+
     Tsdf(size_t size, float voxelSize)
         : m_voxelSize(voxelSize)
     {
@@ -102,6 +110,38 @@ public:
         delete [] m_tsdf;
         delete [] m_weight;
         delete [] m_color;
+    }
+
+    Tsdf(Tsdf&& other) noexcept
+        : Tsdf()
+    {
+        swap(*this, other);
+    }
+
+    Tsdf& operator=(Tsdf&& other) noexcept
+    {
+        delete [] m_tsdf;
+        m_tsdf = nullptr;
+        delete [] m_weight;
+        m_weight = nullptr;
+        delete [] m_color;
+        m_color = nullptr;
+        m_size = 0;
+        m_voxelSize = 0;
+        m_origin = Vector3f(0,0,0);
+        swap(*this, other);
+        return *this;
+    }
+
+    void friend swap(Tsdf& first, Tsdf& second) noexcept
+    {
+        using std::swap;
+        swap(first.m_tsdf, second.m_tsdf);
+        swap(first.m_weight, second.m_weight);
+        swap(first.m_color, second.m_color);
+        swap(first.m_size, second.m_size);
+        swap(first.m_voxelSize, second.m_voxelSize);
+        swap(first.m_origin, second.m_origin);
     }
 
     // set m_voxelSize according to the points
@@ -267,6 +307,21 @@ public:
     unsigned int getSize() const
     {
         return m_size;
+    }
+
+    bool isEmpty() const
+    {
+        if(m_tsdf == nullptr &&
+           m_weight == nullptr &&
+           m_color == nullptr &&
+           m_size == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     // debug method
