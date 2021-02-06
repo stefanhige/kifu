@@ -31,7 +31,7 @@ int main()
     }
 
     KiFuModel model(sensor);
-    int nFrames = 100;
+    int nFrames = 10;
     for(int i=0; i<nFrames; i++)
     {
         StopWatch watch;

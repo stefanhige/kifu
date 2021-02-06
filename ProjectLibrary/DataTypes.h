@@ -5,7 +5,9 @@
 #include <fstream>
 #include <assert.h>
 #include <cstdint>
+#include <numeric>
 #include "Eigen.h"
+#include "StopWatch.h"
 
 // MATLAB-style macros to profile the execution time gains by parallelism (OpenMP)
 //#define TIMING_ENABLED
@@ -51,8 +53,13 @@ struct PointCloud
         std::transform(pointsValid.begin(), pointsValid.end(), normalsValid.begin(),
                        std::back_inserter(pointsAndNormalsValid), std::logical_and<>());
 
+        size_t n_valid = std::accumulate(pointsAndNormalsValid.begin(), pointsAndNormalsValid.end(), 0);
+
         std::vector<Vector3f> points_;
+        points_.reserve(n_valid);
         std::vector<Vector3f> normals_;
+        normals_.reserve(n_valid);
+
         for (size_t i = 0; i < pointsAndNormalsValid.size(); ++i)
         {
             if(pointsAndNormalsValid[i])

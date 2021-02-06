@@ -7,7 +7,8 @@ class StopWatch
 public:
     StopWatch(){}
     StopWatch(std::string info)
-        :m_info(info){}
+        : m_info(info)
+    {}
     ~StopWatch()
     {
          auto end_time = std::chrono::high_resolution_clock::now();

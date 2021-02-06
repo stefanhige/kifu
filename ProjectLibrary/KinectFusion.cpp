@@ -75,7 +75,7 @@ KiFuModel::KiFuModel(VirtualSensor &InputHandle)
 
 void KiFuModel::prepareNextFrame(bool& result)
 {
-    StopWatch watch;
+    //StopWatch watch;
     if(m_InputHandle->processNextFrame())
     {
         result = true;
