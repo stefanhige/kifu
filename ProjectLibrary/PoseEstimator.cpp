@@ -98,9 +98,9 @@ NearestNeighborPoseEstimator::NearestNeighborPoseEstimator()
 
 Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
 {
-    m_nearestNeighborSearch = std::make_unique<NearestNeighborSearchFlann>();
+    std::unique_ptr<NearestNeighborSearch> nearestNeighborSearch = std::make_unique<NearestNeighborSearchFlann>();
     // Build the index of the FLANN tree (for fast nearest neighbor lookup).
-    m_nearestNeighborSearch->buildIndex(m_target.points);
+    nearestNeighborSearch->buildIndex(m_target.points);
 
     // The initial estimate can be given as an argument.
     Matrix4f estimatedPose = initialPose;
@@ -109,7 +109,7 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
     {
         auto transformedPoints = transformPoint(m_source.points, estimatedPose);
         auto transformedNormals = transformNormal(m_source.normals, estimatedPose);
-        auto matches = m_nearestNeighborSearch->queryMatches(transformedPoints);
+        auto matches = nearestNeighborSearch->queryMatches(transformedPoints);
 
         pruneCorrespondences(transformedNormals, m_target.normals, matches);
 
@@ -132,8 +132,6 @@ Matrix4f NearestNeighborPoseEstimator::estimatePose(Matrix4f initialPose)
         ASSERT_NDBG(sourcePoints.size() >= 3);
         estimatedPose = solvePointToPlane(sourcePoints, targetPoints, m_target.normals) * estimatedPose;
     }
-
-    m_nearestNeighborSearch.reset();
     return estimatedPose;
 
 }
