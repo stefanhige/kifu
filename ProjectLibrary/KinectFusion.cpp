@@ -2,13 +2,19 @@
 #include "StopWatch.h"
 
 
-KiFuModel::KiFuModel(VirtualSensor &InputHandle)
+KiFuModel::KiFuModel(VirtualSensor& InputHandle,
+                     SurfaceMeasurerInterface& surfaceMeasurer,
+                     SurfaceReconstructorInterface& surfaceReconstructor,
+                     std::shared_ptr<Tsdf> tsdf)
     : m_InputHandle(&InputHandle),
+      m_SurfaceMeasurer(&surfaceMeasurer),
+      m_SurfaceReconstructor(&surfaceReconstructor),
+      m_tsdf(tsdf),
       m_refPoseGroundTruth((m_InputHandle->processNextFrame(), m_InputHandle->getTrajectory()))
 {
-    m_SurfaceMeasurer = std::make_unique<SurfaceMeasurer>(m_InputHandle->getDepthIntrinsics(),
-                                            m_InputHandle->getDepthImageHeight(),
-                                            m_InputHandle->getDepthImageWidth());
+    //m_SurfaceMeasurer = std::make_unique<SurfaceMeasurer>(m_InputHandle->getDepthIntrinsics(),
+    //                                        m_InputHandle->getDepthImageHeight(),
+    //                                        m_InputHandle->getDepthImageWidth());
 
     m_SurfaceMeasurer->registerInput(m_InputHandle->getDepth());
     //m_SurfaceMeasurer->smoothInput();
@@ -22,12 +28,10 @@ KiFuModel::KiFuModel(VirtualSensor &InputHandle)
 
     m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
 
-    // 512 will be ~500MB ram
-    // 1024 -> 4GB
-    m_tsdf = std::make_shared<Tsdf>(256, 1);
+
     m_tsdf->calcVoxelSize(Frame0);
 
-    m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
+    //m_SurfaceReconstructor = std::make_unique<SurfaceReconstructor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
     m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
                                         m_InputHandle->getColorRGBX(),

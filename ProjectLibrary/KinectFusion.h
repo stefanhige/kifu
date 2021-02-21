@@ -22,7 +22,10 @@
 class KiFuModel
 {
 public:
-    KiFuModel(VirtualSensor & InputHandle);
+    KiFuModel(VirtualSensor & inputHandle,
+              SurfaceMeasurerInterface& surfaceMeasurer,
+              SurfaceReconstructorInterface& surfaceReconstructor,
+              std::shared_ptr<Tsdf> tsdf);
 
     bool processNextFrame();
 
@@ -37,9 +40,9 @@ private:
 
     VirtualSensor* m_InputHandle;
 
-    std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
+    SurfaceMeasurerInterface* m_SurfaceMeasurer;
     std::unique_ptr<PoseEstimator> m_PoseEstimator;
-    std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
+    SurfaceReconstructorInterface* m_SurfaceReconstructor;
     std::unique_ptr<SurfacePredictor> m_SurfacePredictor;
 
     PointCloud m_nextFrame;

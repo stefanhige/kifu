@@ -1,5 +1,6 @@
 #include "KinectFusion.h"
 #include "VirtualSensor.h"
+#include "DataTypes.h"
 #include <filesystem>
 
 #include "StopWatch.h"
@@ -30,8 +31,15 @@ int main()
         return -1;
     }
 
-    KiFuModel model(sensor);
-    int nFrames = 10;
+    // 512 will be ~500MB ram
+    // 1024 -> 4GB
+    auto tsdf = std::make_shared<Tsdf>(256, 1);
+
+    SurfaceMeasurer surfaceMeasurer(sensor.getDepthIntrinsics(), sensor.getDepthImageHeight(), sensor.getDepthImageWidth());
+    SurfaceReconstructor surfaceReconstructor(tsdf, sensor.getDepthIntrinsics());
+
+    KiFuModel model(sensor, surfaceMeasurer, surfaceReconstructor, tsdf);
+    int nFrames = 100;
     for(int i=0; i<nFrames; i++)
     {
         StopWatch watch;
