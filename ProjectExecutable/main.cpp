@@ -5,6 +5,21 @@
 
 #include "StopWatch.h"
 
+KiFuModel constructKiFu(std::shared_ptr<VirtualSensor> sensor)
+{
+    // 512 will be ~500MB ram
+    // 1024 -> 4GB
+    auto tsdf = std::make_shared<Tsdf>(256, 1);
+
+    auto surfaceMeasurer = std::make_unique<SurfaceMeasurer>(sensor->getDepthIntrinsics(), sensor->getDepthImageHeight(), sensor->getDepthImageWidth());
+    auto surfaceReconstructor = std::make_unique<SurfaceReconstructor>(tsdf, sensor->getDepthIntrinsics());
+    auto poseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
+    auto surfacePredictor = std::make_unique<SurfacePredictor>(tsdf, sensor->getDepthIntrinsics());
+    //KiFuModel model(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
+    //return model;
+    return KiFuModel(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
+}
+
 int main()
 {
 
@@ -31,16 +46,8 @@ int main()
         return -1;
     }
 
-    // 512 will be ~500MB ram
-    // 1024 -> 4GB
-    auto tsdf = std::make_shared<Tsdf>(256, 1);
+    KiFuModel model = constructKiFu(sensor);
 
-    auto surfaceMeasurer = std::make_unique<SurfaceMeasurer>(sensor->getDepthIntrinsics(), sensor->getDepthImageHeight(), sensor->getDepthImageWidth());
-    auto surfaceReconstructor = std::make_unique<SurfaceReconstructor>(tsdf, sensor->getDepthIntrinsics());
-    auto poseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
-    auto surfacePredictor = std::make_unique<SurfacePredictor>(tsdf, sensor->getDepthIntrinsics());
-
-    KiFuModel model(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
     int nFrames = 100;
     for(int i=0; i<nFrames; i++)
     {

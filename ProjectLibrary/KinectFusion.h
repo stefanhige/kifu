@@ -29,6 +29,9 @@ public:
               std::unique_ptr<ISurfacePredictor> && surfacePredictor,
               std::shared_ptr<Tsdf> tsdf);
 
+    //KiFuModel(KiFuModel &&) = default;
+    //KiFuModel(const KiFuModel &) = delete;
+
     bool processNextFrame();
 
     // debug method
