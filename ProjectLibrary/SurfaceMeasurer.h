@@ -10,20 +10,30 @@
 //#include <opencv2/imgproc.hpp>
 
 // takes the raw depth data and backprojects it into 3D camera space
-class SurfaceMeasurer
+class ISurfaceMeasurer
+{
+public:
+    virtual void registerInput(float*) = 0;
+    virtual void saveDepthMap(std::string) = 0;
+    virtual void process() = 0;
+    virtual PointCloud getPointCloud() = 0;
+
+};
+
+class SurfaceMeasurer : public ISurfaceMeasurer
 {
 public:
     SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, uint DepthImageHeight, uint DepthImageWidth);
 
     // set pointer of m_rawDepthMap. SurfaceMeasurer does not take care of memory management for depthMap
-    void registerInput(float* depthMap);
+    void registerInput(float* depthMap) override;
 
-    void saveDepthMap(std::string filename);
+    void saveDepthMap(std::string filename) override;
 
     // main method: process current depth map
-    void process();
+    void process() override;
 
-    PointCloud getPointCloud();
+    PointCloud getPointCloud() override;
 
 private:
     void smoothInput();

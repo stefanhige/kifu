@@ -4,16 +4,27 @@
 #include "DataTypes.h"
 // predict an image to a certain pose from the global model
 // this is equivalent to taking a shapshot of the global model with a 'virutal' camera from a certain pose.
-class SurfacePredictor
+
+class ISurfacePredictor
+{
+public:
+    virtual PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const = 0;
+    virtual void predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const = 0;
+
+};
+
+
+
+class SurfacePredictor : public ISurfacePredictor
 {
 public:
     SurfacePredictor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIntrinsics);
 
     // predict a PointCloud to a certain pose (depth information only)
-    PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const;
+    PointCloud predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const override;
     // predict a color image from a certain pose
     // color image gets stored in the memory pointed to by colorMap
-    void predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const;
+    void predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose = Matrix4f::Identity()) const override;
 
 private:
    // interpolate m_tsdf to continous locations

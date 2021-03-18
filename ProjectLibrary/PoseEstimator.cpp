@@ -2,17 +2,17 @@
 #include "StopWatch.h"
 
 
-void PoseEstimator::setTarget(PointCloud& input)
+void IPoseEstimator::setTarget(PointCloud& input)
 {
     m_target = input;
 }
 
-void PoseEstimator::setSource(PointCloud& input)
+void IPoseEstimator::setSource(PointCloud& input)
 {
     m_source = input;
 }
 
-void PoseEstimator::setTarget(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals)
+void IPoseEstimator::setTarget(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals)
 {
     m_target.points = points;
     m_target.normals = normals;
@@ -22,12 +22,12 @@ void PoseEstimator::setTarget(const std::vector<Vector3f>& points, const std::ve
 
 }
 
-void PoseEstimator::setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals)
+void IPoseEstimator::setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals)
 {
     setSource(points, normals, 1);
 }
 
-void PoseEstimator::setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals, unsigned int downsample)
+void IPoseEstimator::setSource(const std::vector<Vector3f>& points, const std::vector<Vector3f>& normals, unsigned int downsample)
 {
     if (downsample == 1)
     {
@@ -53,7 +53,7 @@ void PoseEstimator::setSource(const std::vector<Vector3f>& points, const std::ve
     }
 }
 
-void PoseEstimator::printPoints()
+void IPoseEstimator::printPoints()
 {
     std::cout << "first 10 points " << std::endl;
     for(int i =0; i<std::min<int>(10, m_target.points.size());++i)
@@ -62,7 +62,7 @@ void PoseEstimator::printPoints()
     }
 }
 
-std::vector<Vector3f> PoseEstimator::transformPoint(const std::vector<Vector3f>& input, const Matrix4f& pose)
+std::vector<Vector3f> IPoseEstimator::transformPoint(const std::vector<Vector3f>& input, const Matrix4f& pose)
 {
     std::vector<Vector3f> output;
     output.reserve(input.size());
@@ -78,7 +78,7 @@ std::vector<Vector3f> PoseEstimator::transformPoint(const std::vector<Vector3f>&
     return output;
 }
 
-std::vector<Vector3f> PoseEstimator::transformNormal(const std::vector<Vector3f>& input, const Matrix4f& pose)
+std::vector<Vector3f> IPoseEstimator::transformNormal(const std::vector<Vector3f>& input, const Matrix4f& pose)
 {
     std::vector<Vector3f> output;
     output.reserve(input.size());

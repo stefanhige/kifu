@@ -22,7 +22,15 @@
 class KiFuModel
 {
 public:
-    KiFuModel(VirtualSensor & InputHandle);
+    KiFuModel(const std::shared_ptr<VirtualSensor> & inputHandle,
+              std::unique_ptr<ISurfaceMeasurer> && surfaceMeasurer,
+              std::unique_ptr<ISurfaceReconstructor> && surfaceReconstructor,
+              std::unique_ptr<IPoseEstimator> && poseEstimator,
+              std::unique_ptr<ISurfacePredictor> && surfacePredictor,
+              std::shared_ptr<Tsdf> tsdf);
+
+    //KiFuModel(KiFuModel &&) = default;
+    //KiFuModel(const KiFuModel &) = delete;
 
     bool processNextFrame();
 
@@ -35,21 +43,21 @@ public:
 private:
     void prepareNextFrame(bool &result);
 
-    VirtualSensor* m_InputHandle;
+    std::shared_ptr<VirtualSensor> m_InputHandle;
 
-    std::unique_ptr<SurfaceMeasurer> m_SurfaceMeasurer;
-    std::unique_ptr<PoseEstimator> m_PoseEstimator;
-    std::unique_ptr<SurfaceReconstructor> m_SurfaceReconstructor;
-    std::unique_ptr<SurfacePredictor> m_SurfacePredictor;
+    std::unique_ptr<ISurfaceMeasurer> m_SurfaceMeasurer;
+    std::unique_ptr<ISurfaceReconstructor> m_SurfaceReconstructor;
+    std::unique_ptr<IPoseEstimator> m_PoseEstimator;
+    std::unique_ptr<ISurfacePredictor> m_SurfacePredictor;
+
+    std::shared_ptr<Tsdf> m_tsdf;
 
     PointCloud m_nextFrame;
     std::mutex m_nextFrameMutex;
-
 
     Matrix4f m_CamToWorld;
     std::vector<Matrix4f> m_currentPose;
     std::vector<Matrix4f> m_currentPoseGroundTruth;
     const Matrix4f m_refPoseGroundTruth;
 
-    std::shared_ptr<Tsdf> m_tsdf;
 };

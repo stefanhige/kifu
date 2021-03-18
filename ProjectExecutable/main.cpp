@@ -1,8 +1,24 @@
 #include "KinectFusion.h"
 #include "VirtualSensor.h"
+#include "DataTypes.h"
 #include <filesystem>
 
 #include "StopWatch.h"
+
+KiFuModel constructKiFu(std::shared_ptr<VirtualSensor> sensor)
+{
+    // 512 will be ~500MB ram
+    // 1024 -> 4GB
+    auto tsdf = std::make_shared<Tsdf>(256, 1);
+
+    auto surfaceMeasurer = std::make_unique<SurfaceMeasurer>(sensor->getDepthIntrinsics(), sensor->getDepthImageHeight(), sensor->getDepthImageWidth());
+    auto surfaceReconstructor = std::make_unique<SurfaceReconstructor>(tsdf, sensor->getDepthIntrinsics());
+    auto poseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
+    auto surfacePredictor = std::make_unique<SurfacePredictor>(tsdf, sensor->getDepthIntrinsics());
+    //KiFuModel model(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
+    //return model;
+    return KiFuModel(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
+}
 
 int main()
 {
@@ -23,15 +39,16 @@ int main()
 
     std::cout << "Initialize virtual sensor..." << std::endl;
 
-    VirtualSensor sensor;
-    if (!sensor.init(dataFolderLocation))
+    auto sensor = std::make_shared<VirtualSensor>();
+    if (!sensor->init(dataFolderLocation))
     {
         std::cout << "Failed to initialize the sensor!\nCheck file path!" << std::endl;
         return -1;
     }
 
-    KiFuModel model(sensor);
-    int nFrames = 10;
+    KiFuModel model = constructKiFu(sensor);
+
+    int nFrames = 100;
     for(int i=0; i<nFrames; i++)
     {
         StopWatch watch;
