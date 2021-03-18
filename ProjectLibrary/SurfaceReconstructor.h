@@ -2,7 +2,7 @@
 
 #include "Eigen.h"
 #include "DataTypes.h"
-class SurfaceReconstructorInterface
+class ISurfaceReconstructor
 {
 public:
     virtual void reconstruct(const float*, const uint8_t*, const uint, const uint, const Matrix4f) = 0;
@@ -10,7 +10,7 @@ public:
 
 
 // integrates a depth frame into the global model
-class SurfaceReconstructor : public SurfaceReconstructorInterface
+class SurfaceReconstructor : public ISurfaceReconstructor
 {
 public:
     SurfaceReconstructor(){}

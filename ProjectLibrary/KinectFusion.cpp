@@ -2,19 +2,20 @@
 #include "StopWatch.h"
 
 
-KiFuModel::KiFuModel(VirtualSensor& InputHandle,
-                     SurfaceMeasurerInterface& surfaceMeasurer,
-                     SurfaceReconstructorInterface& surfaceReconstructor,
+KiFuModel::KiFuModel(const std::shared_ptr<VirtualSensor> & InputHandle,
+                     std::unique_ptr<ISurfaceMeasurer> && surfaceMeasurer,
+                     std::unique_ptr<ISurfaceReconstructor> && surfaceReconstructor,
+                     std::unique_ptr<IPoseEstimator> && poseEstimator,
+                     std::unique_ptr<ISurfacePredictor> && surfacePredictor,
                      std::shared_ptr<Tsdf> tsdf)
-    : m_InputHandle(&InputHandle),
-      m_SurfaceMeasurer(&surfaceMeasurer),
-      m_SurfaceReconstructor(&surfaceReconstructor),
+    : m_InputHandle(InputHandle),
+      m_SurfaceMeasurer(std::forward<std::unique_ptr<ISurfaceMeasurer>>(surfaceMeasurer)),
+      m_SurfaceReconstructor(std::forward<std::unique_ptr<ISurfaceReconstructor>>(surfaceReconstructor)),
+      m_PoseEstimator(std::forward<std::unique_ptr<IPoseEstimator>>(poseEstimator)),
+      m_SurfacePredictor(std::forward<std::unique_ptr<ISurfacePredictor>>(surfacePredictor)),
       m_tsdf(tsdf),
       m_refPoseGroundTruth((m_InputHandle->processNextFrame(), m_InputHandle->getTrajectory()))
 {
-    //m_SurfaceMeasurer = std::make_unique<SurfaceMeasurer>(m_InputHandle->getDepthIntrinsics(),
-    //                                        m_InputHandle->getDepthImageHeight(),
-    //                                        m_InputHandle->getDepthImageWidth());
 
     m_SurfaceMeasurer->registerInput(m_InputHandle->getDepth());
     //m_SurfaceMeasurer->smoothInput();
@@ -25,8 +26,6 @@ KiFuModel::KiFuModel(VirtualSensor& InputHandle,
 
     PointCloud Frame0_pruned = Frame0;
     Frame0_pruned.prune();
-
-    m_PoseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
 
 
     m_tsdf->calcVoxelSize(Frame0);
@@ -40,8 +39,6 @@ KiFuModel::KiFuModel(VirtualSensor& InputHandle,
                                         Matrix4f::Identity());
 
     //m_tsdf->writeToFile("tsdf_frame0.ply", 0.01, 0);
-
-    m_SurfacePredictor = std::make_unique<SurfacePredictor>(m_tsdf, m_InputHandle->getDepthIntrinsics());
 
     m_currentPose.push_back(Matrix4f::Identity());
     m_CamToWorld = Matrix4f::Identity();

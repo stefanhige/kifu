@@ -6,10 +6,10 @@
 
 // estimate a 4x4 transformation matrix 'pose',
 // which alignes PointCloud Source with PointCloud Target.
-class PoseEstimator
+class IPoseEstimator
 {
 public:
-    PoseEstimator(){}
+    IPoseEstimator(){}
 
     void setTarget(PointCloud& input);
     void setSource(PointCloud& input);
@@ -32,7 +32,7 @@ protected:
 };
 
 // see also: Kok-Lim Low "Linear Least-Squares Optimization for Point-to-Plane ICP Surface Registration"
-class NearestNeighborPoseEstimator : public PoseEstimator
+class NearestNeighborPoseEstimator : public IPoseEstimator
 {
 public:
     NearestNeighborPoseEstimator();

@@ -24,8 +24,8 @@ int main()
 
     std::cout << "Initialize virtual sensor..." << std::endl;
 
-    VirtualSensor sensor;
-    if (!sensor.init(dataFolderLocation))
+    auto sensor = std::make_shared<VirtualSensor>();
+    if (!sensor->init(dataFolderLocation))
     {
         std::cout << "Failed to initialize the sensor!\nCheck file path!" << std::endl;
         return -1;
@@ -35,10 +35,12 @@ int main()
     // 1024 -> 4GB
     auto tsdf = std::make_shared<Tsdf>(256, 1);
 
-    SurfaceMeasurer surfaceMeasurer(sensor.getDepthIntrinsics(), sensor.getDepthImageHeight(), sensor.getDepthImageWidth());
-    SurfaceReconstructor surfaceReconstructor(tsdf, sensor.getDepthIntrinsics());
+    auto surfaceMeasurer = std::make_unique<SurfaceMeasurer>(sensor->getDepthIntrinsics(), sensor->getDepthImageHeight(), sensor->getDepthImageWidth());
+    auto surfaceReconstructor = std::make_unique<SurfaceReconstructor>(tsdf, sensor->getDepthIntrinsics());
+    auto poseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
+    auto surfacePredictor = std::make_unique<SurfacePredictor>(tsdf, sensor->getDepthIntrinsics());
 
-    KiFuModel model(sensor, surfaceMeasurer, surfaceReconstructor, tsdf);
+    KiFuModel model(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
     int nFrames = 100;
     for(int i=0; i<nFrames; i++)
     {

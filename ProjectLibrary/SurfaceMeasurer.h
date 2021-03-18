@@ -10,7 +10,7 @@
 //#include <opencv2/imgproc.hpp>
 
 // takes the raw depth data and backprojects it into 3D camera space
-class SurfaceMeasurerInterface
+class ISurfaceMeasurer
 {
 public:
     virtual void registerInput(float*) = 0;
@@ -20,7 +20,7 @@ public:
 
 };
 
-class SurfaceMeasurer : public SurfaceMeasurerInterface
+class SurfaceMeasurer : public ISurfaceMeasurer
 {
 public:
     SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, uint DepthImageHeight, uint DepthImageWidth);
