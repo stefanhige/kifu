@@ -7,6 +7,7 @@
 
 #include "Eigen.h"
 #include "FreeImageHelper.h"
+#include "DataTypes.h"
 
 typedef uint8_t BYTE;
 
@@ -149,6 +150,10 @@ public:
 	unsigned int getDepthImageHeight() {
 		return m_depthImageHeight;
 	}
+
+    ImageSize getDepthImageSize() {
+        return ImageSize {.w = m_depthImageWidth, .h = m_depthImageHeight};
+    }
 
 	// get current trajectory transformation
 	Eigen::Matrix4f getTrajectory() {

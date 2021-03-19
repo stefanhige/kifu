@@ -1,10 +1,10 @@
 #include "SurfaceMeasurer.h"
 
-SurfaceMeasurer::SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, uint DepthImageHeight, uint DepthImageWidth)
+SurfaceMeasurer::SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, ImageSize depthImageSize)
     : m_DepthIntrinsics(DepthIntrinsics),
-      m_DepthImageHeight(DepthImageHeight),
-      m_DepthImageWidth(DepthImageWidth),
-      m_pointCloud(DepthImageHeight*DepthImageWidth)
+      m_DepthImageHeight(depthImageSize.h),
+      m_DepthImageWidth(depthImageSize.w),
+      m_pointCloud(depthImageSize.h * depthImageSize.w)
 {}
 
 void SurfaceMeasurer::registerInput(float* depthMap)

@@ -9,25 +9,18 @@
 #include "Eigen.h"
 #include "StopWatch.h"
 
-// MATLAB-style macros to profile the execution time gains by parallelism (OpenMP)
-//#define TIMING_ENABLED
-
-#ifdef TIMING_ENABLED
-#define tic() (omp_get_wtime())
-#define toc(a) (printf("%s, %i: dur %f s\n", __FILE__, __LINE__, omp_get_wtime() - a))
-#define rtoc(a) (omp_get_wtime() - a)
-#else
-#define tic() ((double)0)
-#define toc(a) ((void)a)
-#define rtoc(a) ((double)0)
-#endif
-
 // release-build assertion
 #define ASSERT_NDBG(expr) {if(!(expr)){ \
     std::cerr << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << ":" << \
     " Assertion '" << \
     #expr \
     << "' failed." << std::endl; exit(1);}}
+
+struct ImageSize
+{
+    size_t w;
+    size_t h;
+};
 
 // PointCloud, with points normals and their validity
 // all std::vectors should always have eqal length, although this is not enforced by the class!

@@ -11,7 +11,7 @@ KiFuModel constructKiFu(std::shared_ptr<VirtualSensor> sensor)
     // 1024 -> 4GB
     auto tsdf = std::make_shared<Tsdf>(256, 1);
 
-    auto surfaceMeasurer = std::make_unique<SurfaceMeasurer>(sensor->getDepthIntrinsics(), sensor->getDepthImageHeight(), sensor->getDepthImageWidth());
+    auto surfaceMeasurer = std::make_unique<SurfaceMeasurer>(sensor->getDepthIntrinsics(), sensor->getDepthImageSize());
     auto surfaceReconstructor = std::make_unique<SurfaceReconstructor>(tsdf, sensor->getDepthIntrinsics());
     auto poseEstimator = std::make_unique<NearestNeighborPoseEstimator>();
     auto surfacePredictor = std::make_unique<SurfacePredictor>(tsdf, sensor->getDepthIntrinsics());
