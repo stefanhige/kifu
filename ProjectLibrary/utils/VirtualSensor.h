@@ -134,6 +134,10 @@ public:
 		return m_colorImageHeight;
 	}
 
+    ImageSize getColorImageSize() {
+        return ImageSize {.w = m_colorImageWidth, .h = m_colorImageHeight};
+    }
+
 	// depth (ir) camera info
 	Eigen::Matrix3f getDepthIntrinsics() {
 		return m_depthIntrinsics;

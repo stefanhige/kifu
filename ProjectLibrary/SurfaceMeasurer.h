@@ -23,7 +23,7 @@ public:
 class SurfaceMeasurer : public ISurfaceMeasurer
 {
 public:
-    SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, ImageSize depthImageSize);
+    SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, const ImageSize& depthImageSize);
 
     // set pointer of m_rawDepthMap. SurfaceMeasurer does not take care of memory management for depthMap
     void registerInput(float* depthMap) override;

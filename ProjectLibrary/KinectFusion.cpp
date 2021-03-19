@@ -34,8 +34,7 @@ KiFuModel::KiFuModel(const std::shared_ptr<VirtualSensor> & InputHandle,
 
     m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
                                         m_InputHandle->getColorRGBX(),
-                                        m_InputHandle->getDepthImageHeight(),
-                                        m_InputHandle->getDepthImageWidth(),
+                                        m_InputHandle->getDepthImageSize(),
                                         Matrix4f::Identity());
 
     //m_tsdf->writeToFile("tsdf_frame0.ply", 0.01, 0);
@@ -98,8 +97,7 @@ bool KiFuModel::processNextFrame()
     PointCloud prevFrame;
     {
         //StopWatch watch("SurfacePredictor");
-        prevFrame = m_SurfacePredictor->predict(m_InputHandle->getDepthImageHeight(),
-                                                m_InputHandle->getDepthImageWidth(),
+        prevFrame = m_SurfacePredictor->predict(m_InputHandle->getDepthImageSize(),
                                                 m_currentPose.back());
         prevFrame.prune();
     }
@@ -126,8 +124,7 @@ bool KiFuModel::processNextFrame()
     // integrate the new frame in the tsdf
     m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
                                         m_InputHandle->getColorRGBX(),
-                                        m_InputHandle->getDepthImageHeight(),
-                                        m_InputHandle->getDepthImageWidth(),
+                                        m_InputHandle->getDepthImageSize(),
                                         m_currentPose.back());
 
     // actually skips the last frame, but that's ok
@@ -148,8 +145,7 @@ void KiFuModel::saveScreenshot(std::string filename, const Matrix4f pose) const
     FreeImageB image(m_InputHandle->getDepthImageWidth(), m_InputHandle->getDepthImageHeight(), 3);
 
     m_SurfacePredictor->predictColor(image.data,
-                                     m_InputHandle->getDepthImageHeight(),
-                                     m_InputHandle->getDepthImageWidth(),
+                                     m_InputHandle->getDepthImageSize(),
                                      pose);
 
     image.SaveImageToFile(filename);

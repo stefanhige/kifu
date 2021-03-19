@@ -1,6 +1,6 @@
 #include "SurfaceMeasurer.h"
 
-SurfaceMeasurer::SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, ImageSize depthImageSize)
+SurfaceMeasurer::SurfaceMeasurer(Eigen::Matrix3f DepthIntrinsics, const ImageSize& depthImageSize)
     : m_DepthIntrinsics(DepthIntrinsics),
       m_DepthImageHeight(depthImageSize.h),
       m_DepthImageWidth(depthImageSize.w),

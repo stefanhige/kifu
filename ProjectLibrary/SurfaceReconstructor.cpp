@@ -9,10 +9,12 @@ SurfaceReconstructor::SurfaceReconstructor(std::shared_ptr<Tsdf> tsdf, Matrix3f 
 
 void SurfaceReconstructor::reconstruct(const float* rawDepthMap,
                                        const uint8_t* rawColorMap,
-                                       const uint imageHeight,
-                                       const uint imageWidth,
-                                       const Matrix4f cameraToWorld)
+                                       const ImageSize& imageSize,
+                                       const Matrix4f& cameraToWorld)
 {
+
+    const uint imageHeight = imageSize.h;
+    const uint imageWidth = imageSize.w;
 
     // for each point in the tsdf:
     // loop over idx

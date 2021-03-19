@@ -6,8 +6,11 @@ SurfacePredictor::SurfacePredictor(std::shared_ptr<Tsdf> tsdf, Matrix3f cameraIn
 {
 }
 
-PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose) const
+PointCloud SurfacePredictor::predict(const ImageSize& depthImageSize, const Matrix4f pose) const
 {
+   const uint depthImageHeight = depthImageSize.h;
+   const uint depthImageWidth = depthImageSize.w;
+
    float fovX = m_cameraIntrinsics(0, 0);
    float fovY = m_cameraIntrinsics(1, 1);
    float cX = m_cameraIntrinsics(0, 2);
@@ -123,8 +126,11 @@ PointCloud SurfacePredictor::predict(const uint depthImageHeight, const uint dep
    return pointCloud;
 }
 
-void SurfacePredictor::predictColor(uint8_t* colorMap, const uint depthImageHeight, const uint depthImageWidth, const Matrix4f pose) const
+void SurfacePredictor::predictColor(uint8_t* colorMap, const ImageSize& depthImageSize, const Matrix4f pose) const
 {
+    const uint depthImageWidth = depthImageSize.w;
+    const uint depthImageHeight = depthImageSize.h;
+
     float fovX = m_cameraIntrinsics(0, 0);
     float fovY = m_cameraIntrinsics(1, 1);
     float cX = m_cameraIntrinsics(0, 2);
