@@ -28,7 +28,7 @@ set(GTEST_SOURCE_DIR googletest-source)
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_STANDARD 17)  #necessary due to std::filesystem
+set(CMAKE_CXX_STANDARD 20)  # 17 necessary due to std::filesystem, 20 for designated initializers
 add_compile_options(-Wall -Wextra -Wno-sign-compare -pedantic)
 
 ########################################### EIGEN #######################################
