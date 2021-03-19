@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <future>
 
 #include "Eigen.h"
 #include "VirtualSensor.h"
@@ -38,7 +39,7 @@ public:
     void saveScreenshot(std::string filename, const Matrix4f pose=Matrix4f::Identity()) const;
 
 private:
-    void prepareNextFrame(bool &result);
+    bool prepareNextFrame();
 
     std::shared_ptr<VirtualSensor> m_InputHandle;
 

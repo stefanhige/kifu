@@ -44,8 +44,8 @@ KiFuModel::KiFuModel(const std::shared_ptr<VirtualSensor> & InputHandle,
     m_CamToWorld = Matrix4f::Identity();
     m_currentPoseGroundTruth.push_back(m_InputHandle->getTrajectory() * m_refPoseGroundTruth.inverse());
 
-    bool res;
-    prepareNextFrame(res);
+    // TODO: check return value
+    prepareNextFrame();
 
     //SimpleMesh camMesh = SimpleMesh::camera(m_currentPose.back());
     //camMesh.writeMesh("CamMesh.off");
@@ -74,13 +74,12 @@ KiFuModel::KiFuModel(const std::shared_ptr<VirtualSensor> & InputHandle,
 
 }
 
-void KiFuModel::prepareNextFrame(bool& result)
+bool KiFuModel::prepareNextFrame()
 {
     //StopWatch watch;
     if(m_InputHandle->processNextFrame())
     {
-        result = true;
-        return;
+        return true;
     }
 
 
@@ -90,8 +89,7 @@ void KiFuModel::prepareNextFrame(bool& result)
     const std::lock_guard<std::mutex> lock(m_nextFrameMutex);
     m_nextFrame = m_SurfaceMeasurer->getPointCloud();
     m_nextFrame.prune();
-    result = false;
-    return;
+    return false;
 }
 
 bool KiFuModel::processNextFrame()
@@ -117,14 +115,13 @@ bool KiFuModel::processNextFrame()
     // read out current ground truth before launching thread
     m_currentPoseGroundTruth.push_back(m_InputHandle->getTrajectory() * m_refPoseGroundTruth.inverse());
 
-    bool isLastFrame;
-    std::thread nextFrameThread(&KiFuModel::prepareNextFrame, this, std::ref(isLastFrame));
+    std::future<bool> isLastFrameFut = std::async(std::launch::async, &KiFuModel::prepareNextFrame, this);
 
     m_CamToWorld = m_PoseEstimator->estimatePose(m_CamToWorld);
     m_currentPose.push_back(m_CamToWorld.inverse());
     ASSERT_NDBG(m_currentPose.size() == m_currentPoseGroundTruth.size())
 
-    nextFrameThread.join();
+    const bool isLastFrame = isLastFrameFut.get();
 
     // integrate the new frame in the tsdf
     m_SurfaceReconstructor->reconstruct(m_InputHandle->getDepth(),
