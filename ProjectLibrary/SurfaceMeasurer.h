@@ -14,11 +14,12 @@
 class ISurfaceMeasurer
 {
 public:
+    virtual ~ISurfaceMeasurer() = default;
+
     virtual void registerInput(float*) = 0;
     virtual void saveDepthMap(std::string) = 0;
     virtual void process() = 0;
     virtual PointCloud getPointCloud() = 0;
-
 };
 
 class SurfaceMeasurer : public ISurfaceMeasurer

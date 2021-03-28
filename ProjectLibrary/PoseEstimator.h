@@ -11,6 +11,7 @@ class IPoseEstimator
 {
 public:
     IPoseEstimator(){}
+    virtual ~IPoseEstimator() = default;
 
     void setTarget(PointCloud& input);
     void setSource(PointCloud& input);

@@ -6,6 +6,7 @@
 class ISurfaceReconstructor
 {
 public:
+    virtual ~ISurfaceReconstructor() = default;
     virtual void reconstruct(const float*, const uint8_t*, const ImageSize&, const Matrix4f&) = 0;
 };
 

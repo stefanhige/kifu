@@ -9,6 +9,7 @@
 class ISurfacePredictor
 {
 public:
+    virtual ~ISurfacePredictor() = default;
     virtual PointCloud predict(const ImageSize& depthImageSize, const Matrix4f pose = Matrix4f::Identity()) const = 0;
     virtual void predictColor(uint8_t* colorMap, const ImageSize& depthImageSize, const Matrix4f pose = Matrix4f::Identity()) const = 0;
 
