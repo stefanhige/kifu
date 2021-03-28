@@ -23,7 +23,7 @@
 class KiFuModel
 {
 public:
-    KiFuModel(const std::shared_ptr<VirtualSensor> & inputHandle,
+    KiFuModel(const std::shared_ptr<IVirtualSensor> & inputHandle,
               std::unique_ptr<ISurfaceMeasurer> && surfaceMeasurer,
               std::unique_ptr<ISurfaceReconstructor> && surfaceReconstructor,
               std::unique_ptr<IPoseEstimator> && poseEstimator,
@@ -41,7 +41,7 @@ public:
 private:
     bool prepareNextFrame();
 
-    std::shared_ptr<VirtualSensor> m_InputHandle;
+    std::shared_ptr<IVirtualSensor> m_InputHandle;
 
     std::unique_ptr<ISurfaceMeasurer> m_SurfaceMeasurer;
     std::unique_ptr<ISurfaceReconstructor> m_SurfaceReconstructor;

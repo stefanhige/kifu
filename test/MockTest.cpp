@@ -3,11 +3,24 @@
 #include <filesystem>
 
 #include "DataTypes.h"
+#include "VirtualSensor.h"
 #include "SurfaceMeasurer.h"
 #include "SurfacePredictor.h"
 #include "SurfaceReconstructor.h"
 #include "PoseEstimator.h"
 #include "KinectFusion.h"
+
+class MockVirtualSensor : public IVirtualSensor
+{
+public:
+    MockVirtualSensor(){}
+   MOCK_METHOD(bool, processNextFrame, (), (override));
+   MOCK_METHOD(Eigen::Matrix4f, getTrajectory, (), (const, override));
+   MOCK_METHOD(float*, getDepth, (), (override));
+   MOCK_METHOD(BYTE*, getColorRGBX, (), (override));
+   MOCK_METHOD(ImageSize, getDepthImageSize, (), (const, override));
+
+};
 
 
 class MockSurfaceMeasurer : public ISurfaceMeasurer
@@ -43,42 +56,28 @@ public:
 
 };
 
-KiFuModel constructKiFu(std::shared_ptr<VirtualSensor> sensor)
+
+TEST(KifuTest, ConstructorTest)
 {
+    auto sensor = std::make_shared<MockVirtualSensor>();
+
     // 512 will be ~500MB ram
     // 1024 -> 4GB
-    auto tsdf = std::make_shared<Tsdf>(256, 1);
+    auto tsdf = std::make_shared<Tsdf>(16, 1);
 
     auto surfaceMeasurer = std::make_unique<MockSurfaceMeasurer>();
     auto surfaceReconstructor = std::make_unique<MockSurfaceReconstructor>();
     auto poseEstimator = std::make_unique<MockPoseEstimator>();
     auto surfacePredictor = std::make_unique<MockSurfacePredictor>();
-    return KiFuModel(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
-}
+
+    EXPECT_CALL(*surfaceMeasurer, registerInput).Times(2);
+    EXPECT_CALL(*surfaceMeasurer, process).Times(2);
+    EXPECT_CALL(*surfaceMeasurer, getPointCloud).Times(2);
+
+    EXPECT_CALL(*surfaceReconstructor, reconstruct).Times(1);
 
 
-std::shared_ptr<VirtualSensor> constructVirtualSensor()
-{
-    // load video
 
-    std::string filenameIn = std::string("../kifu/data/rgbd_dataset_freiburg1_xyz/");
-
-    //Verify that folder exists
-    std::filesystem::path executableFolderPath =  std::filesystem::canonical("/proc/self/exe").parent_path();    //Folder of executable from system call
-    std::filesystem::path dataFolderLocation = executableFolderPath.parent_path() / filenameIn;
-
-    if (!std::filesystem::exists(dataFolderLocation))
-    {
-        std::cout << "No input files at folder " << dataFolderLocation << std::endl;
-    }
-
-    std::cout << "Initialize virtual sensor..." << std::endl;
-
-    auto sensor = std::make_shared<VirtualSensor>();
-    if (!sensor->init(dataFolderLocation))
-    {
-        std::cout << "Failed to initialize the sensor!\nCheck file path!" << std::endl;
-    }
-    return sensor;
+    KiFuModel model(sensor, std::move(surfaceMeasurer), std::move(surfaceReconstructor), std::move(poseEstimator), std::move(surfacePredictor), tsdf);
 }
 

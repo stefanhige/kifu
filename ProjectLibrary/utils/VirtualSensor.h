@@ -11,8 +11,22 @@
 
 typedef uint8_t BYTE;
 
+class IVirtualSensor
+{
+public:
+    virtual ~IVirtualSensor() = default;
+
+    // TODO: add unneccessary methods to public interface
+    virtual bool processNextFrame() = 0;
+    virtual Eigen::Matrix4f getTrajectory() const = 0;
+    virtual float* getDepth() = 0;
+    virtual BYTE* getColorRGBX() = 0;
+    virtual ImageSize getDepthImageSize() const = 0;
+
+};
+
 // reads sensor files according to https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
-class VirtualSensor {
+class VirtualSensor : public IVirtualSensor {
 public:
 
 	VirtualSensor() : m_currentIdx(-1), m_increment(1) { }
@@ -64,7 +78,7 @@ public:
 		return true;
 	}
 
-	bool processNextFrame() {
+    bool processNextFrame() override {
 		if (m_currentIdx == -1) m_currentIdx = 0;
 		else m_currentIdx += m_increment;
 
@@ -103,64 +117,64 @@ public:
         return false;
 	}
 
-	unsigned int getCurrentFrameCnt() {
+    unsigned int getCurrentFrameCnt() const {
 		return (unsigned int)m_currentIdx;
 	}
 
 	// get current color data
-	BYTE* getColorRGBX() {
+    BYTE* getColorRGBX() override {
 		return m_colorFrame;
 	}
 
 	// get current depth data
-	float* getDepth() {
+    float* getDepth() override {
 		return m_depthFrame;
 	}
 
 	// color camera info
-	Eigen::Matrix3f getColorIntrinsics() {
+    Eigen::Matrix3f getColorIntrinsics() const {
 		return m_colorIntrinsics;
 	}
 
-	Eigen::Matrix4f getColorExtrinsics() {
+    Eigen::Matrix4f getColorExtrinsics() const {
 		return m_colorExtrinsics;
 	}
 
-	unsigned int getColorImageWidth() {
+    unsigned int getColorImageWidth() const {
 		return m_colorImageWidth;
 	}
 
-	unsigned int getColorImageHeight() {
+    unsigned int getColorImageHeight() const {
 		return m_colorImageHeight;
 	}
 
-    ImageSize getColorImageSize() {
+    ImageSize getColorImageSize() const {
         return ImageSize {.w = m_colorImageWidth, .h = m_colorImageHeight};
     }
 
 	// depth (ir) camera info
-	Eigen::Matrix3f getDepthIntrinsics() {
+    Eigen::Matrix3f getDepthIntrinsics() const {
 		return m_depthIntrinsics;
 	}
 
-	Eigen::Matrix4f getDepthExtrinsics() {
+    Eigen::Matrix4f getDepthExtrinsics() const {
 		return m_depthExtrinsics;
 	}
 
-	unsigned int getDepthImageWidth() {
+    unsigned int getDepthImageWidth() const {
 		return m_depthImageWidth;
 	}
 
-	unsigned int getDepthImageHeight() {
+    unsigned int getDepthImageHeight() const {
 		return m_depthImageHeight;
 	}
 
-    ImageSize getDepthImageSize() {
+    ImageSize getDepthImageSize() const override {
         return ImageSize {.w = m_depthImageWidth, .h = m_depthImageHeight};
     }
 
 	// get current trajectory transformation
-	Eigen::Matrix4f getTrajectory() {
+    Eigen::Matrix4f getTrajectory() const override {
 		return m_currentTrajectory;
 	}
 

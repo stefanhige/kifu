@@ -2,7 +2,7 @@
 #include "StopWatch.h"
 
 
-KiFuModel::KiFuModel(const std::shared_ptr<VirtualSensor> & InputHandle,
+KiFuModel::KiFuModel(const std::shared_ptr<IVirtualSensor> & InputHandle,
                      std::unique_ptr<ISurfaceMeasurer> && surfaceMeasurer,
                      std::unique_ptr<ISurfaceReconstructor> && surfaceReconstructor,
                      std::unique_ptr<IPoseEstimator> && poseEstimator,
@@ -142,7 +142,8 @@ void KiFuModel::saveTsdf(std::string filename, float tsdfThreshold, float weight
 
 void KiFuModel::saveScreenshot(std::string filename, const Matrix4f pose) const
 {
-    FreeImageB image(m_InputHandle->getDepthImageWidth(), m_InputHandle->getDepthImageHeight(), 3);
+    ImageSize imageSize = m_InputHandle->getDepthImageSize();
+    FreeImageB image(imageSize.w, imageSize.h, 3);
 
     m_SurfacePredictor->predictColor(image.data,
                                      m_InputHandle->getDepthImageSize(),
