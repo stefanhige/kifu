@@ -102,8 +102,8 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_RECIPE_DIR}/CMakeL
         message(FATAL_ERROR "CMake step for googletest failed: ${result}")
     endif()
     execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_RECIPE_DIR}")
-    message("patch googletest")
-    execute_process(COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/googletest.patch WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_SOURCE_DIR})
+    #message("patch googletest")
+    #execute_process(COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/googletest.patch WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_DIR}/${GTEST_SOURCE_DIR})
 endif()
 
 # Prevent GoogleTest from overriding our compiler/linker options
